@@ -1,0 +1,1497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="InTheLoop: turn maps, change maps, PR maps and visual docs that help you understand the code your AI agent writes.">
+<style>:root{color-scheme:light;box-sizing:border-box}body{margin:0;padding:0}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+<title>InTheLoop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one 1080px column; hero pairs the thesis with the cognitive-debt chart, then one band per tool with a
+   miniature of the page it writes, then principles, install. Colors are InTheLoop's own card language. */
+:root {
+  --bg: #f7f6f3; --surface: #ffffff; --ink: #1c1b19; --muted: #6b6860; --faint: #b3afa6; --line: #e2dfd8;
+  --code-bg: #efece6; --chip: #ebe8e1;
+  --how: #2f6fdb; --how-soft: #e8f0fd;
+  --decision: #b7791f; --decision-soft: #fbf1df;
+  --warning: #d0342c; --warning-soft: #fde8e6;
+  --give: #1f8a5b; --give-soft: #e3f4ea;
+  --new: #7048e8; --new-soft: #efeafe;
+  --f-display: "Schibsted Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "IBM Plex Sans", -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #161614; --surface: #201f1c; --ink: #edeae4; --muted: #9a968d; --faint: #55524b; --line: #34322d;
+  --code-bg: #2c2a26; --chip: #302e29;
+  --how: #6e9ef0; --how-soft: #1d2940; --decision: #e0a54a; --decision-soft: #3a2d17;
+  --warning: #f06a60; --warning-soft: #432020; --give: #4cc38a; --give-soft: #173327;
+  --new: #a78bfa; --new-soft: #2a2342; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #161614; --surface: #201f1c; --ink: #edeae4; --muted: #9a968d; --faint: #55524b; --line: #34322d;
+  --code-bg: #2c2a26; --chip: #302e29;
+  --how: #6e9ef0; --how-soft: #1d2940; --decision: #e0a54a; --decision-soft: #3a2d17;
+  --warning: #f06a60; --warning-soft: #432020; --give: #4cc38a; --give-soft: #173327;
+  --new: #a78bfa; --new-soft: #2a2342; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 16px/1.6 var(--f-body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; letter-spacing: -.015em; }
+p { margin: 0; }
+code, .mono { font-family: var(--f-mono); font-size: .88em; }
+code { background: var(--code-bg); padding: .1em .35em; border-radius: 4px; }
+a { color: inherit; text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--how); outline-offset: 3px; border-radius: 4px; }
+.eyebrow { font: 600 12px/1 var(--f-body); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+
+/* top bar */
+.top { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding-block: 22px; }
+.mark { font: 800 19px/1 var(--f-display); letter-spacing: -.02em; display: flex; align-items: center; gap: 10px; text-decoration: none; }
+/* logo: the agent's loop as three arcs in the turn-map hues (asked, worked out, delivered), with you as the dot inside it */
+.mark svg { width: 28px; height: 28px; flex: none; }
+.mark svg circle { fill: none; stroke-width: 3; stroke-linecap: round; stroke-dasharray: 11.8 41.61; transform: rotate(-90deg); transform-origin: center; }
+.mark svg .l1 { stroke: var(--how); } .mark svg .l2 { stroke: var(--decision); } .mark svg .l3 { stroke: var(--give); }
+.mark svg .you { fill: currentColor; stroke: none; }
+.mark span { font-weight: 500; } .mark span b { font-weight: 800; }
+@media (prefers-reduced-motion: no-preference) {
+  .mark svg g { transform-origin: center; transition: transform .6s cubic-bezier(.2, .7, .2, 1); }
+  .mark:hover svg g { transform: rotate(120deg); }
+}
+.top nav { display: flex; gap: 22px; font-size: 14px; color: var(--muted); flex-wrap: wrap; }
+.top nav a { text-decoration: none; } .top nav a:hover { color: var(--ink); }
+
+/* hero */
+.hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 56px; align-items: center; padding-block: 48px 72px; }
+.hero > * { min-width: 0; }
+/* the headline keeps its three lines: sized to the column (cqi), never wrapped */
+.hero > div:first-child { container-type: inline-size; }
+.hero h1 { font-size: min(54px, 9.8cqi); line-height: 1.3; font-weight: 800; white-space: nowrap; }
+.hero h1 em { font-style: normal; }
+/* "Understand" drawn as an added line in a diff, "burning out" as a removed one */
+.hero h1 .added { background: #5fd896; color: #0b2417; padding: 0 .14em; border-radius: 8px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.hero h1 .removed { background: #f2a49d; color: #2e0b08; padding: 0 .14em; border-radius: 8px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.hero .lede { margin-top: 22px; font-size: 19px; color: var(--muted); max-width: 34em; }
+.hero .lede b { color: var(--ink); font-weight: 600; }
+.cta { display: flex; gap: 12px; margin-top: 30px; flex-wrap: wrap; align-items: center; }
+.btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 18px; border-radius: 8px; font-weight: 600; font-size: 15px; text-decoration: none; border: 1.5px solid var(--ink); }
+.btn.solid { background: var(--ink); color: var(--bg); }
+.btn.ghost:hover { background: var(--surface); }
+
+/* debt chart */
+.debt { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 24px 24px 18px; }
+.debt h2 { font-size: 15px; font-weight: 700; letter-spacing: 0; }
+.debt .sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.legend { display: flex; gap: 16px; font-size: 12px; color: var(--muted); margin-top: 14px; flex-wrap: wrap; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.legend i { width: 10px; height: 10px; border-radius: 2px; }
+.sw-code { background: var(--faint); } .sw-known { background: var(--how); }
+.row { margin-top: 18px; }
+.row-h { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+.row-h b { font-weight: 600; } .row-h span { color: var(--muted); }
+.bars { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 10px; }
+.cell { display: flex; flex-direction: column; gap: 6px; }
+.plot { height: 96px; display: flex; align-items: flex-end; gap: 4px; border-bottom: 1px solid var(--line); }
+.plot i { flex: 1; border-radius: 3px 3px 0 0; }
+.plot .c { background: var(--faint); } .plot .k { background: var(--how); }
+.cell small { font-size: 11px; color: var(--muted); line-height: 1.3; }
+.cell small b { display: block; color: var(--ink); font-weight: 500; }
+.gap-note { font-size: 11px; color: var(--warning); font-family: var(--f-mono); }
+/* hero: the Before picture, the title, the After picture. Both sides step through three pairs together (the debt chart,
+   turn maps, change maps); each side's slides share one grid cell so it never changes height */
+.hero { grid-template-columns: 1.25fr 1fr 1.25fr; gap: 32px; width: min(1400px, 100vw - 40px); margin-inline: calc(50% - min(700px, 50vw - 20px)); }
+.hero-text { container-type: inline-size; text-align: center; }
+.hero .lede { margin-inline: auto; }
+.hero .cta { justify-content: center; }
+.hero-side { margin: 0; align-self: stretch; display: grid; min-width: 0; padding: 18px; border-radius: 24px; border: 1.5px solid var(--c);
+  box-shadow: 0 0 0 5px var(--halo); background: linear-gradient(var(--tint), var(--tint)) var(--bg); }
+.side-before { --c: #d0342c; --halo: rgba(208, 52, 44, .12); --tint: rgba(208, 52, 44, .08); }
+.side-after { --c: #1f8a5b; --halo: rgba(31, 138, 91, .14); --tint: rgba(31, 138, 91, .09); }
+.slides { display: grid; }
+.slide { grid-area: 1 / 1; min-width: 0; display: flex; flex-direction: column; opacity: 0; visibility: hidden; transition: opacity .45s ease, visibility 0s .45s; }
+.slide.is-on { opacity: 1; visibility: visible; transition: opacity .45s ease; }
+/* turn maps and change maps: the tool sections' own .bfaf, cloned and zoomed to the side's width by the script */
+.slide { justify-content: center; }
+.slide .pic { min-width: 0; overflow: hidden; }
+/* the debt chart, one row per side, sized to fill the side */
+.chart-side { flex: 1; display: grid; grid-template-rows: auto 1fr; gap: 10px; }
+/* the bars grow to fill the side; every cell keeps room for a gap note so both sides' bars line up */
+.chart-side .debt { display: flex; flex-direction: column; padding: 20px; }
+.chart-side .row { flex: 1; display: flex; flex-direction: column; margin-top: 14px; }
+.chart-side .bars { flex: 1; }
+.chart-side .cell { position: relative; padding-bottom: 18px; }
+.chart-side .plot { flex: 1; height: auto; min-height: 120px; }
+.chart-side .cell small { font-size: 12px; min-height: 3.9em; }
+.chart-side .gap-note { position: absolute; bottom: 0; left: 0; }
+.show-nav { display: flex; gap: 6px; align-items: center; max-width: 440px; margin: 30px auto 0; }
+.show-dot { flex: 1; position: relative; overflow: hidden; font: 600 13px/1 var(--f-body); color: var(--muted); background: var(--chip); border: 0; border-radius: 999px; padding: 10px 12px; cursor: pointer; }
+.show-dot:hover, .show-dot.is-on { color: var(--ink); }
+.show-dot i { position: absolute; inset: auto 0 0; height: 3px; background: var(--how); transform: scaleX(0); transform-origin: left; }
+.show-dot.is-on i { animation: show-fill 7s linear forwards; }
+/* pauses while the pointer is on a picture, a tab has keyboard focus, or the pause button is on */
+.show:has(.hero-side:hover) .show-dot.is-on i, .show:has(:focus-visible) .show-dot.is-on i, .show.paused .show-dot.is-on i { animation-play-state: paused; }
+@keyframes show-fill { to { transform: scaleX(1); } }
+.show-pause { flex: none; width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--line); background: none; color: var(--muted); font-size: 10px; cursor: pointer; }
+.show-pause:hover { color: var(--ink); }
+/* reduced motion: no fades and no auto-advance; the tabs still switch slides */
+@media (prefers-reduced-motion: reduce) {
+  .slide, .slide.is-on { transition: none; }
+  .show-dot.is-on i { animation: none; transform: scaleX(1); }
+  .show-pause { display: none; }
+}
+
+/* sections */
+section.band { padding-block: 76px; border-top: 1px solid var(--line); }
+.band-h { display: grid; grid-template-columns: 1fr 1.4fr; gap: 40px; align-items: end; margin-bottom: 40px; }
+.band-h h2 { font-size: clamp(28px, 3.4vw, 40px); line-height: 1.08; font-weight: 800; }
+.band-h p { color: var(--muted); font-size: 17px; max-width: 36em; }
+.band-h p b { color: var(--ink); font-weight: 600; }
+
+.stages { display: grid; gap: 14px; }
+.stages > p { color: var(--muted); font-size: 17px; max-width: 36em; }
+.stages ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 8px; }
+.stages li { display: grid; grid-template-columns: 138px 1fr; gap: 14px; font-size: 15px; padding-top: 8px; border-top: 1px solid var(--line); }
+.stages li b { font-family: var(--f-display); font-weight: 700; }
+.stages li > div { display: grid; gap: 4px; }
+.stages .debt-line { color: var(--muted); }
+.stages .debt-line span { font: 600 10.5px/1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--warning); margin-right: 8px; }
+.stages .q { font-weight: 600; }
+.stages .how { color: var(--muted); }
+.stages .how b { color: var(--ink); font-weight: 600; }
+#tools .band-h { align-items: start; }
+/* why it matters: the reader's payoff, placed before any mechanics */
+.why { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+.why > * { min-width: 0; }
+.stat { background: var(--ink); color: var(--bg); border-radius: 14px; padding: 26px 24px; display: grid; gap: 12px; align-content: space-between; }
+.stat .big { font: 800 clamp(48px, 6vw, 76px)/.9 var(--f-display); letter-spacing: -.03em; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.stat p { font-size: 16px; line-height: 1.5; }
+.stat small { font-size: 12px; opacity: .7; line-height: 1.45; }
+.stat small a { color: inherit; }
+.payers { display: grid; gap: 10px; align-content: start; }
+.payers > small { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.outcomes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.outcome { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 8px; border-top: 4px solid var(--c, var(--how)); }
+.outcome .who { font: 500 11.5px/1.3 var(--f-mono); color: var(--muted); }
+.outcome h3 { font-size: 20px; font-weight: 700; line-height: 1.2; }
+.outcome p { font-size: 15px; color: var(--muted); }
+/* outcome cards that jump to the tool behind them */
+a.outcome { color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+a.outcome:hover { border-color: var(--c); transform: translateY(-2px); }
+a.outcome h3::after { content: " →"; color: var(--c); }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } a.outcome:hover { transform: none; } }
+.tool { scroll-margin-top: 16px; }
+.outcome .shift { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 14px; margin-top: 4px; }
+.outcome .shift s { color: var(--muted); text-decoration-color: var(--muted); }
+.outcome .shift b { color: var(--c, var(--how)); font-weight: 600; }
+@media (max-width: 860px) { .why { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .outcomes { grid-template-columns: 1fr; } }
+
+/* visual docs miniature: How the code works tab */
+.tabs .t2.on { color: var(--ink); background: var(--decision-soft); }
+.vsec { display: grid; gap: 8px; }
+.vsec > small { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.card code { font-size: 10.5px; justify-self: start; }
+.flow.tight { gap: 4px; } .flow.tight b { padding: 6px 8px; font-size: 11.5px; }
+/* turn maps: before (raw terminal) and after (the turn map) */
+.bfaf { display: grid; grid-template-rows: auto 1fr; gap: 10px; min-width: 0; align-self: stretch; }
+/* a "before" box takes the height of its "after" neighbour: contain:size keeps its own content from setting the row height */
+.bfaf > .tty, .bfaf > .prv { contain: size; }
+.bfaf-step { display: flex; gap: 10px; align-items: baseline; font-size: 13px; color: var(--muted); white-space: nowrap; min-width: 0; }
+.bfaf-cap { overflow: hidden; text-overflow: ellipsis; }
+.bfaf-tag { font: 600 11px/1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; padding: 5px 8px; border-radius: 999px; }
+.bfaf-tag.before { background: var(--warning); color: #fff; }
+.bfaf-tag.after { background: var(--give); color: #fff; }
+.tty { background: #1c1b19; border-radius: 12px; overflow: hidden; border: 1px solid #2c2a26; position: relative; display: flex; flex-direction: column; }
+.tty-bar { display: flex; gap: 6px; align-items: center; padding: 9px 12px; border-bottom: 1px solid #2c2a26; }
+.tty-bar i { width: 9px; height: 9px; border-radius: 50%; background: #3a3833; }
+.tty-bar span { margin-left: 8px; font: 11px/1 var(--f-mono); color: #8a867d; }
+.tty pre { margin: 0; padding: 12px 14px; font: 11px/1.5 var(--f-mono); color: #b9b5ab; flex: 1; min-height: 0; overflow: hidden; white-space: pre; -webkit-mask-image: linear-gradient(#000 78%, transparent); mask-image: linear-gradient(#000 78%, transparent); }
+.tty .more { position: absolute; right: 12px; bottom: 10px; font: 500 11px/1 var(--f-mono); color: #edeae4; background: #3a3833; padding: 5px 8px; border-radius: 999px; }
+.tty .u { color: #edeae4; } .tty .t { color: #8a867d; font-style: italic; } .tty .k { color: #e0a54a; }
+.tty .a { color: #4cc38a; } .tty .d { color: #f06a60; }
+.tty .h { color: #edeae4; font-weight: 500; } .tty .m { color: #6e9ef0; } .tty .g { color: #4cc38a; }
+/* diff lines as Claude Code draws them: a band across the whole width, with the text in its normal color */
+.tty pre .a, .tty pre .d { display: inline-block; min-width: 100%; color: #edeae4; }
+.tty pre .a { background: rgba(46, 160, 67, .28); }
+.tty pre .d { background: rgba(218, 54, 51, .28); }
+/* PR maps "before": a plain pull request view with the whole diff */
+.prv { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; font-size: 12px; }
+.prv > * { flex: none; }
+.prv::after { content: ""; position: absolute; inset: auto 0 0 0; height: 90px; background: linear-gradient(transparent, var(--surface)); }
+.prv-h { display: grid; gap: 2px; } .prv-h b { font-size: 15px; } .prv-h span { color: var(--muted); font-size: 11.5px; }
+.prv-desc { color: var(--muted); padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.prv-file { display: flex; justify-content: space-between; align-items: center; padding: 6px 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 6px 6px 0 0; font-size: 11px; color: var(--muted); }
+.prv-file code { font-size: 11px; color: var(--ink); }
+.prv-diff { margin: -8px 0 0; padding: 8px 10px; border: 1px solid var(--line); border-top: 0; border-radius: 0 0 6px 6px; font: 10.5px/1.5 var(--f-mono); white-space: pre; overflow: hidden; }
+.prv-diff .a { color: var(--give); } .prv-diff .d { color: var(--warning); }
+.prv .more { position: absolute; right: 12px; bottom: 10px; font: 500 11px/1 var(--f-mono); color: var(--bg); background: var(--ink); padding: 5px 8px; border-radius: 999px; z-index: 1; }
+/* tool rows: title and summary, then before | after, then the debt | how it's paid down beneath each */
+.tool { display: grid; grid-template-columns: 1fr 1fr; gap: 28px 32px; align-items: start; padding-block: 44px; }
+/* each side outlined like a diff: before = removed (red), after = added (green) */
+.tool .col { grid-row: span 2; display: grid; grid-template-rows: subgrid; row-gap: 24px; align-self: stretch; min-width: 0;
+  padding: 18px; border-radius: 14px; border: 1.5px solid var(--c); box-shadow: 0 0 0 5px var(--halo); background: linear-gradient(var(--tint), var(--tint)) var(--bg); }
+.tool .col-before { --c: #d0342c; --halo: rgba(208, 52, 44, .12); --tint: rgba(208, 52, 44, .08); }
+.tool .col-after { --c: #1f8a5b; --halo: rgba(31, 138, 91, .14); --tint: rgba(31, 138, 91, .09); }
+.tool + .tool { border-top: 1px dashed var(--line); }
+.tool > * { min-width: 0; }
+.tool-head { grid-column: 1 / -1; }
+.tool-title { display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; }
+.tool .when { display: inline-block; font: 500 12.5px/1 var(--f-mono); color: var(--ink); background: var(--surface); border: 1px solid var(--muted); padding: 6px 10px; border-radius: 999px; }
+.tool h3 { font-size: 30px; font-weight: 800; }
+.tool .goal { font-size: 18px; margin-top: 6px; max-width: 46em; color: var(--muted); }
+.tool .ask { font: 700 21px/1.3 var(--f-display); letter-spacing: -.01em; margin-top: 12px; max-width: 46em; }
+.tool h3 .tname { font: 600 15px/1 var(--f-body); letter-spacing: 0; color: var(--muted); margin-left: 6px; }
+.tool :is(.tool-debt, .tool-pay) > ul { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.tool :is(.tool-debt, .tool-pay) > ul > li { padding-left: 22px; position: relative; color: var(--muted); }
+.tool :is(.tool-debt, .tool-pay) > ul > li b { color: var(--ink); font-weight: 600; }
+.tool :is(.tool-debt, .tool-pay) > ul > li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--muted); }
+.tool .side { font: 600 11px/1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; }
+.tool .debt-side { color: var(--warning); }
+.tool .pay-side { color: var(--give); }
+.tool :is(.tool-debt, .tool-pay) > ul.debts > li::before { border-color: var(--warning); }
+.tool .pay-side ~ ul > li::before { border-color: var(--give); }
+.tool .where { margin-top: 18px; font-size: 13px; color: var(--muted); }
+
+/* dark mode: the before/after columns keep the light palette, so they and their dark pictures stand out from the dark page */
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) :is(.tool .col, .hero-side) {
+    --bg: #f7f6f3; --surface: #ffffff; --ink: #1c1b19; --muted: #6b6860; --faint: #b3afa6; --line: #e2dfd8;
+    --code-bg: #efece6; --chip: #ebe8e1; --how: #2f6fdb; --how-soft: #e8f0fd; --decision: #b7791f; --decision-soft: #fbf1df;
+    --warning: #d0342c; --warning-soft: #fde8e6; --give: #1f8a5b; --give-soft: #e3f4ea; --new: #7048e8; --new-soft: #efeafe;
+    color-scheme: light; color: var(--ink); } }
+:root[data-theme="dark"] :is(.tool .col, .hero-side) {
+    --bg: #f7f6f3; --surface: #ffffff; --ink: #1c1b19; --muted: #6b6860; --faint: #b3afa6; --line: #e2dfd8;
+    --code-bg: #efece6; --chip: #ebe8e1; --how: #2f6fdb; --how-soft: #e8f0fd; --decision: #b7791f; --decision-soft: #fbf1df;
+    --warning: #d0342c; --warning-soft: #fde8e6; --give: #1f8a5b; --give-soft: #e3f4ea; --new: #7048e8; --new-soft: #efeafe;
+    color-scheme: light; color: var(--ink); }
+/* dark mode: a stronger red/green tint on the light columns */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :is(.tool .col-before, .side-before) { --tint: rgba(208, 52, 44, .09); }
+  :root:not([data-theme="light"]) :is(.tool .col-after, .side-after) { --tint: rgba(31, 138, 91, .10); } }
+:root[data-theme="dark"] :is(.tool .col-before, .side-before) { --tint: rgba(208, 52, 44, .09); }
+:root[data-theme="dark"] :is(.tool .col-after, .side-after) { --tint: rgba(31, 138, 91, .10); }
+/* page miniatures */
+/* the tool pictures and the debt chart always use the dark palette, whatever the page theme */
+.mini, .prv, .debt {
+  --bg: #161614; --surface: #201f1c; --ink: #edeae4; --muted: #9a968d; --faint: #55524b; --line: #34322d;
+  --code-bg: #2c2a26; --chip: #302e29;
+  --how: #6e9ef0; --how-soft: #1d2940; --decision: #e0a54a; --decision-soft: #3a2d17;
+  --warning: #f06a60; --warning-soft: #432020; --give: #4cc38a; --give-soft: #173327;
+  --new: #a78bfa; --new-soft: #2a2342; color-scheme: dark; color: var(--ink);
+}
+.mini { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; box-shadow: 0 1px 0 var(--line), 0 18px 40px -28px rgba(0,0,0,.35); font-size: 13px; }
+.chrome { display: flex; align-items: center; gap: 6px; padding: 9px 12px; border-bottom: 1px solid var(--line); background: var(--bg); }
+.chrome i { width: 9px; height: 9px; border-radius: 50%; background: var(--line); }
+.chrome span { margin-left: 8px; font: 11px/1 var(--f-mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mini-body { padding: 16px; display: grid; gap: 12px; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs b { font-weight: 600; font-size: 12px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--line); color: var(--muted); border-top-width: 3px; }
+.tabs .t1 { border-top-color: var(--how); }
+.tabs .t1.on { color: var(--ink); background: var(--how-soft); }
+.tabs .t2 { border-top-color: var(--decision); } .tabs .t3 { border-top-color: var(--give); }
+.tabs .t3.on { color: var(--ink); background: var(--give-soft); }
+.flow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.flow b { font-weight: 600; font-size: 12px; padding: 7px 10px; border: 1.5px solid var(--ink); border-radius: 8px; background: var(--surface); position: relative; }
+.flow b.new::after { content: ""; position: absolute; top: -4px; right: -4px; width: 8px; height: 8px; border-radius: 50%; background: var(--new); }
+.flow em { color: var(--faint); font-style: normal; }
+.cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.card { border: 1px solid var(--line); border-radius: 8px; padding: 9px 10px; display: grid; gap: 4px; align-content: start; }
+.card .k { display: flex; align-items: center; gap: 6px; font-weight: 600; font-size: 12px; }
+.card p { font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+.shape { width: 10px; height: 10px; flex: none; }
+.s-how { border-radius: 50%; background: var(--how); }
+.s-dec { background: var(--decision); transform: rotate(45deg) scale(.85); }
+.s-warn { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-bottom: 10px solid var(--warning); }
+.card.isnew { border-color: var(--new); background: var(--new-soft); }
+
+.turn { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.beat { border-radius: 8px; padding: 10px; border-top: 3px solid; background: var(--bg); display: grid; gap: 5px; align-content: start; }
+.beat h4 { margin: 0; font: 600 12px/1.2 var(--f-body); }
+.beat p { font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+.b-ask { border-color: var(--how); } .b-ask h4 { color: var(--how); }
+.b-work { border-color: var(--decision); } .b-work h4 { color: var(--decision); }
+.b-give { border-color: var(--give); } .b-give h4 { color: var(--give); }
+.pill { display: inline-block; font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: var(--decision-soft); color: var(--decision); }
+.move { border: 1.5px solid var(--how); background: var(--how-soft); border-radius: 8px; padding: 9px 11px; font-size: 12px; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
+.move b { color: var(--how); font-weight: 600; }
+.strip { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--muted); flex-wrap: wrap; }
+.strip i { width: 11px; height: 11px; border-radius: 50%; background: var(--ink); display: inline-block; }
+.strip i.ring { background: none; border: 2px solid var(--ink); }
+.strip i.piv { border-radius: 1px; transform: rotate(45deg) scale(.8); }
+.strip i.cur { outline: 2px solid var(--how); outline-offset: 2px; }
+.strip .line { flex: 1; min-width: 20px; height: 1.5px; background: var(--line); }
+
+.objective { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; background: var(--bg); }
+.objective small { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.objective p { font-weight: 600; font-size: 13px; margin-top: 3px; }
+.groups { display: flex; gap: 6px; flex-wrap: wrap; }
+.groups b { font-size: 11.5px; font-weight: 500; padding: 5px 9px; border-radius: 6px; background: var(--chip); color: var(--muted); }
+.groups b.on { background: var(--ink); color: var(--bg); }
+.group { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; }
+.group h5 { margin: 0; font: 600 13px/1.3 var(--f-body); }
+.step { display: grid; grid-template-columns: 18px 1fr; gap: 8px; font-size: 11.5px; color: var(--muted); line-height: 1.45; }
+.step span { font: 500 11px/18px var(--f-mono); color: var(--ink); }
+.diff { font: 11px/1.55 var(--f-mono); background: var(--code-bg); border-radius: 6px; padding: 8px 10px; overflow-x: auto; white-space: pre; }
+.diff .a { color: var(--give); } .diff .d { color: var(--warning); }
+
+/* turn map → change map link */
+.cmlink { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; font-size: 12px; padding: 8px 11px; border-radius: 8px; border: 1px solid color-mix(in srgb, var(--warning) 45%, transparent); background: var(--warning-soft); color: var(--ink); }
+.cmlink b { color: var(--warning); font-weight: 600; }
+/* turn map: the Delivered card opened into its panel */
+.beat.on.b-ask { background: var(--how-soft); box-shadow: inset 0 0 0 1.5px var(--how); }
+.beat.on.b-work { background: var(--decision-soft); box-shadow: inset 0 0 0 1.5px var(--decision); }
+.beat.on.b-give { background: var(--give-soft); box-shadow: inset 0 0 0 1.5px var(--give); }
+.panel { border: 1.5px solid var(--give); border-radius: 8px; padding: 10px 12px; display: grid; gap: 8px; margin-top: -4px; }
+.panel .lead { font-size: 12.5px; font-weight: 600; }
+.ba { display: grid; gap: 4px; }
+.ba small { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.ba div { display: grid; grid-template-columns: 100px 1fr 14px 1fr; gap: 6px; align-items: center; font-size: 11.5px; }
+.ba b { font-weight: 600; } .ba em { font-style: normal; color: var(--faint); }
+.ba .bf { color: var(--muted); text-decoration: line-through; text-decoration-color: var(--faint); } .ba .af { color: var(--give); font-weight: 500; }
+.files { display: flex; gap: 6px 14px; flex-wrap: wrap; font-size: 11px; color: var(--muted); }
+.files code { font-size: 10.5px; }
+/* change map breakdown tree, drawn sideways: what enables the groups on the left, the groups, then the whole change on the right */
+.bd { overflow-x: auto; padding-block: 4px; direction: rtl; } /* rtl so a narrow screen opens scrolled to the whole change */
+.bdtree { direction: ltr; display: flex; align-items: center; min-width: max-content; transform: scaleX(-1); }
+/* the tree is mirrored so the whole change sits on the right; boxes flip back so text reads normally */
+.bdtree .whole, .bdtree .gcard { transform: scaleX(-1); }
+.bdtree .whole { flex: none; max-width: 108px; padding: 7px 10px; border: 1.5px solid var(--ink); border-radius: 10px; font-size: 12px; font-weight: 600; line-height: 1.35; }
+.bdtree .whole small { display: block; font-size: 9.5px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
+.bdtree ul { position: relative; display: flex; flex-direction: column; justify-content: center; margin: 0; padding: 0 0 0 12px; list-style: none; }
+.bdtree ul::before { content: ""; position: absolute; top: 50%; left: 0; width: 12px; border-top: 1.5px solid var(--muted); }
+.bdtree li { position: relative; display: flex; align-items: center; padding: 2px 0 2px 14px; }
+.bdtree li::before, .bdtree li::after { content: ""; position: absolute; left: 0; height: 50%; border-left: 1.5px solid var(--muted); }
+.bdtree li::before { top: 0; } .bdtree li::after { top: 50%; }
+.bdtree li:first-child::before, .bdtree li:last-child::after { border: 0; }
+.bdtree .stem { position: absolute; top: 50%; left: 0; width: 14px; border-top: 1.5px solid var(--muted); }
+.bdtree li.delivers > .stem { border-top: 4px solid var(--ink); margin-top: -2px; }
+.bdtree li.aside > .stem { border-top-style: dashed; }
+.gcard { display: grid; gap: 3px; width: max-content; max-width: 150px; padding: 6px 9px; border: 1.5px solid var(--line); border-radius: 8px; background: var(--surface); }
+.gcard .hd { display: flex; gap: 6px; align-items: center; font-size: 11.5px; font-weight: 600; line-height: 1.25; white-space: nowrap; }
+.gcard .num { flex: none; width: 16px; height: 16px; border-radius: 50%; background: var(--chip); display: grid; place-items: center; font-size: 9.5px; font-weight: 700; }
+.gcard .obj { font-size: 10.5px; line-height: 1.35; color: var(--muted); }
+.gcard .sz { white-space: nowrap; font: 10px/1.2 var(--f-mono); color: var(--muted); }
+.gcard .sz code { font-size: 10px; padding: 0 .3em; color: var(--ink); }
+/* PR map background block */
+.bgnd { display: grid; gap: 5px; }
+.bgnd small { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.bgnd p { font-size: 12px; color: var(--muted); }
+.concepts { display: flex; gap: 6px; flex-wrap: wrap; }
+.concepts b { font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 999px; border: 1px dotted var(--muted); }
+
+/* how it runs */
+.timeline { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; background: var(--surface); }
+.moment { padding: 22px 20px; display: grid; gap: 10px; align-content: start; }
+.moment + .moment { border-left: 1px solid var(--line); }
+.moment .hook { font: 500 11.5px/1.3 var(--f-mono); color: var(--muted); }
+.moment h3 { font-size: 18px; font-weight: 700; }
+.moment p { font-size: 14px; color: var(--muted); }
+.moment .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.tag { font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 999px; background: var(--chip); }
+
+/* principles */
+.principles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px 40px; }
+.principles div { display: grid; gap: 8px; align-content: start; }
+.principles h3 { font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 10px; }
+.principles p { color: var(--muted); font-size: 15px; }
+
+/* install */
+.install { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start; }
+.install > * { min-width: 0; }
+.term { background: #1c1b19; color: #edeae4; border-radius: 12px; padding: 18px 20px; font: 13.5px/1.75 var(--f-mono); overflow-x: auto; }
+.term .c { color: #9a968d; } .term .p { color: #4cc38a; }
+.copy { margin-top: 12px; display: flex; gap: 12px; align-items: center; font-size: 13px; color: var(--muted); flex-wrap: wrap; }
+.copy button { font: 600 13px/1 var(--f-body); padding: 8px 12px; border-radius: 7px; border: 1.5px solid var(--ink); background: var(--surface); color: var(--ink); cursor: pointer; }
+.needs { margin: 18px 0 0; padding: 0; list-style: none; display: grid; gap: 8px; font-size: 15px; color: var(--muted); }
+.needs li b { color: var(--ink); font-weight: 600; }
+.paths { width: 100%; border-collapse: collapse; font-size: 13.5px; margin-top: 22px; }
+.paths td { padding: 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+.paths td:first-child { padding-right: 16px; white-space: nowrap; font-weight: 600; }
+
+.closing { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; }
+.closing h2 { font-size: clamp(24px, 2.8vw, 34px); line-height: 1.15; font-weight: 800; }
+footer { border-top: 1px solid var(--line); padding-block: 28px 44px; font-size: 13px; color: var(--muted); display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+
+@media (max-width: 860px) {
+  .hero, .band-h, .tool, .install { grid-template-columns: 1fr; gap: 28px; }
+  /* stacked, a "before" box has no "after" neighbour to take its height from: size it by its content, capped */
+  .bfaf > .tty, .bfaf > .prv { contain: none; max-height: 440px; }
+  .timeline { grid-template-columns: 1fr 1fr; }
+  .moment:nth-child(3) { border-left: 0; }
+  .moment:nth-child(n+3) { border-top: 1px solid var(--line); }
+  .principles { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 560px) {
+  .cards, .turn { grid-template-columns: 1fr; }
+  .timeline, .principles { grid-template-columns: 1fr; }
+  .moment + .moment { border-left: 0; border-top: 1px solid var(--line); }
+  .top nav { display: none; }
+  .bars { gap: 8px; }
+  .stages li { grid-template-columns: 1fr; gap: 2px; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .plot i { transition: height .5s ease; }
+}
+
+/* interactive pictures: a control (data-show) shows the pane with its key. Panes share one grid cell, so a picture
+   never changes height and the Before box beside it stays matched */
+[data-show] { cursor: pointer; transition: border-color .15s, background-color .15s, color .15s, box-shadow .15s; }
+[data-show]:focus-visible { outline: 2px solid var(--how); outline-offset: 2px; }
+.groups b[data-show]:hover, .tabs b[data-show]:hover { color: var(--ink); }
+.gcard[data-show]:hover { border-color: var(--muted); }
+.gcard.on { border-color: var(--ink); }
+.flow b[data-show]:hover { background: var(--chip); }
+.flow b[data-show].on { background: var(--chip); }
+.beat:not(.on)[data-show]:hover { background: var(--chip); }
+.swap { display: grid; min-width: 0; }
+.swap > [data-pane] { grid-area: 1 / 1; min-width: 0; opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility 0s .25s; }
+.swap > [data-pane].on { opacity: 1; visibility: visible; transition: opacity .25s ease; }
+.vpane { display: grid; gap: 12px; align-content: start; }
+.panel { align-content: start; }
+.panel.p-ask { border-color: var(--how); } .panel.p-work { border-color: var(--decision); }
+.part { display: grid; grid-template-columns: 74px 1fr auto; gap: 8px; font-size: 11.5px; line-height: 1.45; color: var(--muted); }
+.part b { color: var(--ink); font-weight: 600; }
+.part em { font-style: normal; font-weight: 600; color: var(--give); }
+.part code, .step code { font-size: 10.5px; }
+.hist { display: grid; grid-template-columns: 1fr auto; gap: 1px 10px; font-size: 11.5px; line-height: 1.4; padding-top: 7px; border-top: 1px solid var(--line); color: var(--muted); }
+.hist b { color: var(--ink); font-weight: 600; }
+.hist span { grid-column: 1; }
+.hist em { grid-area: 1 / 2 / 3 / 3; align-self: center; font-style: normal; font-weight: 600; color: var(--give); white-space: nowrap; }
+/* room under a terminal's last line, so it clears the fade and the pill once it has scrolled */
+.tty pre { padding-bottom: 120px; }
+
+/* animation: only with html.anim, which the script sets unless the reader prefers reduced motion */
+@keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+@keyframes fadein { from { opacity: 0; } }
+@keyframes grow { from { transform: scaleY(0); } }
+@keyframes hint { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--how) 70%, transparent); } 100% { box-shadow: 0 0 0 9px transparent; } }
+@keyframes newdot { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.5); } }
+html.anim .rv { opacity: 0; }
+html.anim .rv.in { opacity: 1; animation: rise .6s cubic-bezier(.2, .7, .2, 1) var(--rv, 0s) backwards; }
+/* the debt chart grows session by session, each time its slide comes round */
+html.anim .slide.is-on .plot i { transform-origin: bottom; animation: grow .7s cubic-bezier(.2, .7, .2, 1) var(--d, 0s) backwards; }
+html.anim .slide.is-on .plot .k { animation-delay: calc(var(--d, 0s) + .14s); }
+html.anim .slide.is-on .cell small { animation: fadein .45s ease calc(var(--d, 0s) + .3s) backwards; }
+/* a pane's steps come in one after another */
+html.anim .mini:not(.play) [data-pane].on .step { animation: rise .32s ease backwards; }
+html.anim .mini:not(.play) [data-pane].on .step:nth-of-type(2) { animation-delay: .07s; }
+html.anim .mini:not(.play) [data-pane].on .step:nth-of-type(3) { animation-delay: .14s; }
+/* an After picture builds itself in reading order: playMini() gives each piece .st and its place in --i */
+@keyframes pop { from { opacity: 0; transform: scale(0); } }
+@keyframes draw { from { transform: scaleX(0); } }
+@keyframes popmirror { from { opacity: 0; transform: scaleX(-1) scale(.9); } }
+html.anim .mini.wait .mini-body { opacity: 0; }
+html.anim .mini.play .st { animation: rise .42s cubic-bezier(.2, .7, .2, 1) calc(var(--i) * .07s) backwards; }
+html.anim .mini.play .strip i.st { animation-name: pop; }
+html.anim .mini.play .strip .line.st { animation-name: draw; transform-origin: left; }
+html.anim .mini.play :is(.flow em, .bdtree > ul, .bdtree li).st { animation-name: fadein; }
+/* the tree is mirrored, so its boxes keep their flip while they come in */
+html.anim .mini.play .whole.st { animation-name: popmirror; }
+html.anim .mini.play .bdtree li.st > .gcard { animation: popmirror .42s cubic-bezier(.2, .7, .2, 1) calc(var(--i) * .07s) backwards; }
+/* the turn map's link, "clicked" just before the hero moves on to the change map */
+@keyframes cmpress {
+  0% { transform: none; box-shadow: 0 0 0 0 color-mix(in srgb, var(--warning) 60%, transparent); }
+  45% { transform: scale(1.015); box-shadow: 0 0 0 5px color-mix(in srgb, var(--warning) 35%, transparent); }
+  65% { transform: scale(.965); box-shadow: 0 0 0 2px color-mix(in srgb, var(--warning) 35%, transparent); }
+  85%, 100% { transform: none; box-shadow: 0 0 0 5px color-mix(in srgb, var(--warning) 25%, transparent); }
+}
+/* the border keeps flashing to invite a click; slow enough not to strobe, and off for reduced motion */
+@keyframes cmflash {
+  0%, 100% { border-color: color-mix(in srgb, var(--warning) 35%, transparent); box-shadow: 0 0 0 0 transparent; }
+  50% { border-color: var(--warning); box-shadow: 0 0 0 3px color-mix(in srgb, var(--warning) 35%, transparent); }
+}
+html.anim .cmlink:not(.pressing) { animation: cmflash 1.5s ease-in-out infinite; }
+.cmlink { text-decoration: none; cursor: pointer; transition: background-color .18s ease, color .18s ease; }
+.cmlink:hover { background: color-mix(in srgb, var(--warning) 30%, transparent); }
+.cmlink.pressing { background: var(--warning); border-color: var(--warning); color: #1c1b19; animation: cmpress .9s ease both; }
+.cmlink.pressing b { color: #1c1b19; }
+html.anim .mini.hinting [data-hint] { animation: hint 1.3s ease-out 4; }
+html.anim .flow b.new::after { animation: newdot 1.6s ease-in-out 3; }
+@media (prefers-reduced-motion: reduce) {
+  .swap > [data-pane], .swap > [data-pane].on { transition: none; }
+  .tty pre { overflow-y: auto; }
+}
+.bdtree .whole { max-width: 92px; }
+.bdtree ul { padding-left: 8px; } .bdtree ul::before { width: 8px; }
+.bdtree li { padding-left: 10px; } .bdtree .stem { width: 10px; }
+#change-maps .groups b, .pic .groups b { padding: 5px 7px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <a class="mark" href="#top" aria-label="InTheLoop home"><svg viewBox="0 0 24 24" aria-hidden="true"><g><circle class="l1" cx="12" cy="12" r="8.5"/><circle class="l2" cx="12" cy="12" r="8.5" stroke-dashoffset="-17.8"/><circle class="l3" cx="12" cy="12" r="8.5" stroke-dashoffset="-35.6"/></g><circle class="you" cx="12" cy="12" r="3"/></svg><span>InThe<b>Loop</b></span></a>
+    <nav aria-label="Sections">
+      <a href="#why">Why it matters</a>
+      <a href="#tools">The tools</a>
+      <a href="#principles">Principles</a>
+      <a href="#install">Install</a>
+    </nav>
+  </header>
+
+  <section class="hero show" id="top" aria-roledescription="carousel" aria-label="Before and after: turn maps, change maps, cognitive debt">
+    <figure class="hero-side side-before" aria-label="Before">
+      <div class="slides">
+        <div class="slide is-on"><div class="pic" data-clone="turn-maps"></div></div>
+        <div class="slide"><div class="pic" data-clone="change-maps"></div></div>
+        <div class="slide">
+          <div class="chart-side">
+            <div class="bfaf-step"><span class="bfaf-tag before">Before</span><span class="bfaf-cap">Cognitive debt, session by session (illustrative)</span></div>
+            <div class="debt">
+              <div class="legend"><span><i class="sw-code"></i>Code that exists</span><span><i class="sw-known"></i>What you understand</span></div>
+              <div class="row" id="row-without">
+                <div class="row-h"><b>Without InTheLoop</b><span>the gap widens every session</span></div>
+                <div class="bars"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+
+    <div class="hero-text">
+      <p class="eyebrow">For developers who build with Claude Code</p>
+      <h1 style="margin-top:16px"><em class="added">Understand code</em><br>your AI agent writes<br><em class="removed">without burning out</em></h1>
+      <p class="lede">AI agents write code faster than you can absorb it, and the gap between what your codebase does and what you know grows every session. That gap is <b>cognitive debt</b>. InTheLoop closes it with visual pages that build your mental model before you read a line of code.</p>
+      <div class="cta">
+        <a class="btn solid" href="#install">Install in a repo</a>
+      </div>
+      <div class="show-nav">
+        <button type="button" class="show-dot is-on" aria-current="true">Turn maps<i></i></button>
+        <button type="button" class="show-dot" aria-current="false">Change maps<i></i></button>
+        <button type="button" class="show-dot" aria-current="false">Cognitive debt<i></i></button>
+        <button type="button" class="show-pause" aria-pressed="false" aria-label="Pause slideshow">❚❚</button>
+      </div>
+    </div>
+
+    <figure class="hero-side side-after" aria-label="After">
+      <div class="slides">
+        <div class="slide is-on"><div class="pic" data-clone="turn-maps"></div></div>
+        <div class="slide"><div class="pic" data-clone="change-maps"></div></div>
+        <div class="slide">
+          <div class="chart-side">
+            <div class="bfaf-step"><span class="bfaf-tag after">After</span><span class="bfaf-cap">Cognitive debt, session by session (illustrative)</span></div>
+            <div class="debt">
+              <div class="legend"><span><i class="sw-code"></i>Code that exists</span><span><i class="sw-known"></i>What you understand</span></div>
+              <div class="row" id="row-with">
+                <div class="row-h"><b>With InTheLoop</b><span>understanding keeps pace</span></div>
+                <div class="bars"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </figure>
+  </section>
+
+  <section class="band" id="why">
+    <div class="band-h">
+      <div><p class="eyebrow">What cognitive debt costs</p><h2 style="margin-top:12px">Less time decoding code. More time building with it.</h2></div>
+      <p><b>Skim, and you ship code you don't understand. Read every line, and you're exhausted by Thursday.</b> Skimming builds cognitive debt, and like any debt, it comes due with interest. Engineers already spend most of their day understanding code; every unread line an agent writes adds to that bill, and reviewers, on-call engineers and new hires all pay it. InTheLoop pays it down as the code arrives.</p>
+    </div>
+    <div class="why">
+      <div class="stat">
+        <span class="big">58–70%</span>
+        <p>of a developer's time went to understanding code, not writing it, in studies from before AI agents. Agents now add code faster than anyone can read it. InTheLoop gives you the mental model before you open a file.</p>
+        <small><a href="https://ink.library.smu.edu.sg/sis_research/3779" target="_blank" rel="noopener">Xia et al., 2018</a> (about 58%, field study of 78 professionals); <a href="https://sonar.ch/documents/328164/files/Mine2015b.pdf" target="_blank" rel="noopener">Minelli et al., 2015</a> (about 70%, IDE sessions).</small>
+      </div>
+      <div class="payers">
+      <small>Who pays the interest, and what changes</small>
+      <div class="outcomes">
+        <a class="outcome go" href="#turn-maps" style="--c:var(--decision)"><span class="who">for the author</span><h3>Keep up with your own agent</h3><p>Each turn ends with what was delivered and what needs your call, so you stay on top of the code you asked for.</p><div class="shift"><s>skim and hope</s><b>follow every turn</b></div></a>
+        <a class="outcome go" href="#pr-maps" style="--c:var(--how)"><span class="who">for reviewers</span><h3>Understand a PR before you judge it</h3><p>Reviewers understand a PR before they open the code: its background, a flow diagram, and the diff split into small explained pieces.</p><div class="shift"><s>decoding what the diff is for</s><b>starting from its purpose</b></div></a>
+        <a class="outcome go" href="#change-maps" style="--c:var(--warning)"><span class="who">for whoever's on call</span><h3>Fewer surprises after merge</h3><p>Every change carries why and how it was made, so debugging can start from the reason instead of "who wrote this, and why?"</p><div class="shift"><s>archaeology at 2am</s><b>the why is on record</b></div></a>
+        <a class="outcome go" href="#visual-docs" style="--c:var(--give)"><span class="who">for newcomers, and you after a break</span><h3>A working mental model before the first file</h3><p>Visual docs explain the product, the code and its history, so you start from how it all fits together, not from a file tree.</p><div class="shift"><s>piecing it together from files</s><b>the big picture first</b></div></a>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" id="tools">
+    <div class="band-h">
+      <div><p class="eyebrow">Where cognitive debt builds up, from one turn to the whole codebase</p><h2 style="margin-top:12px">Each turn, each change, each pull request, the whole codebase.</h2></div>
+      <div class="stages">
+        <p>Cognitive debt builds up wherever code arrives faster than you take it in. Each tool closes the gap where it usually opens. One example runs through all four: making a CSV export resume after a crash. The After pictures work like the real pages, so click their cards, groups and tabs.</p>
+        <!-- debt / question / how per tool; hidden for now, remove `hidden` to show it again -->
+        <ol hidden>
+          <li><b>Each turn</b><div><p class="debt-line"><span>Debt</span>Each turn delivers more than you can take in, so details of what was delivered slip past, along with the choices Claude made and its reasons.</p><p class="q">What did this turn deliver, and what did Claude decide on its own?</p><p class="how"><b>Turn maps</b> lead with what was delivered and what changed, list each call Claude made and why, and flag what's waiting on you.</p></div></li>
+          <li><b>Each change</b><div><p class="debt-line"><span>Debt</span>Parts of the code stay unclear, and every edit built on those parts adds to the debt.</p><p class="q">What is each part of this edit for?</p><p class="how"><b>Change maps</b> draw the edit as a tree of groups (which ones deliver the change, which ones make them possible), then walk through each group's steps alongside its diff.</p></div></li>
+          <li><b>Each pull request</b><div><p class="debt-line"><span>Debt</span>Reviewers spend most of their time working out what the diff is for before they can judge it.</p><p class="q">What is this PR for, and how does each part serve it?</p><p class="how"><b>PR maps</b> build the mental model before you read a line of code: the objective, background, flow diagrams of how the changed code runs, then the diff in explained groups.</p></div></li>
+          <li><b>The whole repo</b><div><p class="debt-line"><span>Debt</span>The codebase outgrows anyone's picture of it, and the reasons behind each change get lost.</p><p class="q">Which code is responsible for which product behavior, and how and why was it built that way?</p><p class="how"><b>Visual docs</b> explain the product as its users experience it, map that behavior to the parts of the code responsible for it, and link every change map that touched those parts. New hires step through those changes to see how it was built, and on-call engineers go back to them to see why.</p></div></li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Turn maps -->
+    <article class="tool" id="turn-maps">
+      <div class="tool-head">
+        <div class="tool-title"><h3>Each turn <span class="tname">Turn maps</span></h3><span class="when">updates after every turn</span></div>
+        <p class="ask">What did this turn deliver, and what did Claude decide on its own?</p>
+        <p class="goal">One card per turn shows what was delivered, the calls Claude made and what it needs from you, so you don't have to read the whole trace.</p>
+      </div>
+      <div class="col col-before">
+        <div class="bfaf">
+          <div class="bfaf-step">
+            <span class="bfaf-tag before">Before</span><span class="bfaf-cap">One turn in Claude Code: reasoning, tools and reply</span>
+          </div>
+          <div class="tty" aria-hidden="true">
+            <pre><span class="u">&gt; make exports resumable after a crash, keep the CSV format</span>
+  
+  <span class="t">✻ Thinking…</span>
+  <span class="t">  The export job writes rows in one long loop. If it dies at
+    row 90k we restart from 1. Checkpoint every row? A write per
+    row is too slow on big tables. 1,000 feels like a fair trade.</span>
+  
+  <span class="g">●</span> Read <span class="h">12 files</span> (ctrl+o to expand)
+  
+  <span class="t">✻ Thinking…</span>
+  <span class="t">  The runner owns job state, so resuming touches it too. Start
+    with a store, then the writer, then the restart path.</span>
+  
+  <span class="g">●</span> <span class="h">Write</span>(checkpoint.py)
+    ⎿  Wrote 22 lines to checkpoint.py
+         1   import json, os
+         2   CKPT_DIR = os.environ.get("CKPT_DIR", ".ckpt")
+         3   def save(job, row):
+         4       with open(_path(job), "w") as f:
+  <span class="t">     … +18 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(db/models.py)
+    ⎿  Updated db/models.py with 41 additions and 2 removals
+        27   class ExportJob(Base):
+<span class="d">        28 -     status = Column(String)</span>
+<span class="a">        28 +     status = Column(String, nullable=False)</span>
+<span class="a">        29 +     snapshot_id = Column(String)</span>
+  <span class="t">     … +39 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(export.py)
+    ⎿  Updated export.py with 48 additions and 6 removals
+        84   def write_rows(job, rows):
+<span class="d">        85 -     for row in rows:</span>
+<span class="d">        86 -         writer.writerow(row)</span>
+<span class="a">        85 +     start = resume.start_row(job)</span>
+<span class="a">        86 +     for i, row in enumerate(rows, 1):</span>
+<span class="a">        87 +         if i &lt;= start: continue</span>
+<span class="a">        88 +         writer.writerow(row)</span>
+<span class="a">        89 +         if i % 1000 == 0: checkpoint.save(job, i)</span>
+  <span class="t">     … +41 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(utils/csv_out.py)
+    ⎿  Updated utils/csv_out.py with 66 additions and 11 removals
+<span class="d">        18 -     self.f = open(path, "w")</span>
+<span class="a">        18 +     self.f = open(path, "a" if resume else "w")</span>
+  <span class="t">     … +64 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(jobs/runner.py)
+    ⎿  Updated jobs/runner.py with 52 additions and 9 removals
+        41   def run(job):
+<span class="d">        42 -     result = job.start()</span>
+<span class="a">        42 +     state = load_state(job)</span>
+<span class="a">        43 +     result = job.start(state)</span>
+  <span class="t">     … +49 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Bash</span>(pytest tests/test_export.py -q)
+    ⎿  ..F.......  1 failed, 45 passed
+  
+  <span class="t">✻ Thinking…</span>
+  <span class="t">  Snapshot test: if the source changed, restart from zero
+    rather than mix two snapshots.</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(resume.py)
+    ⎿  Updated resume.py with 61 additions and 9 removals
+<span class="d">        12 - def start_row(job): return 0</span>
+<span class="a">        12 + def start_row(job):</span>
+<span class="a">        13 +     ck = checkpoint.load(job)</span>
+<span class="a">        14 +     if not ck: return 0</span>
+<span class="a">        15 +     if ck["snap"] != job.snapshot_id:</span>
+<span class="a">        16 +         return 0</span>
+<span class="a">        17 +     return ck["row"]</span>
+  <span class="t">     … +52 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(db/snapshots.py)
+    ⎿  Updated db/snapshots.py with 58 additions and 7 removals
+<span class="a">        30 + def current_id(table):</span>
+<span class="a">        31 +     return _latest(table).id</span>
+  <span class="t">     … +56 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Write</span>(tests/test_resume.py)
+    ⎿  Wrote 86 lines to tests/test_resume.py
+         1   def test_resume_matches_clean_run(tmp_path):
+         2       assert resumed(tmp_path) == clean(tmp_path)
+  <span class="t">     … +84 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Bash</span>(pytest -q)
+    ⎿  46 passed
+  
+  <span class="u">● Exports now resume after a crash instead of starting over.</span>
+  <span class="u">  - export.py: write_rows() skips rows already written and
+      saves a checkpoint every 1,000 rows (a write per row was
+      too slow on big tables).
+    - checkpoint.py (new): stores {row, snapshot_id} per job
+      under .ckpt/, overridable with CKPT_DIR.
+    - resume.py: start_row() reads the checkpoint; if the source
+      snapshot changed, it restarts from row 0.
+    - jobs/runner.py: passes job state through on restart.
+    - jobs/retry.py: retries now resume rather than start over.
+    - db/snapshots.py: exposes the id the checks compare.
+    - migrations/0042.py: adds a column for the snapshot id.
+    Tests: 46 passed. One open question: should I split the
+    export job into two steps (snapshot, then write) so resumes
+    never re-read the source? I can draft that plan.</span>
+  
+  <span class="t">✻ Worked for 6m 12s</span></pre>
+            <span class="more">…and 800 more lines this turn</span>
+          </div>
+        </div>
+        <div class="tool-debt">
+          <p class="side debt-side">What goes wrong</p>
+          <ul class="debts">
+            <li><b>The reply is one block at the end of a long scroll.</b> What was delivered, decided and left open all read the same.</li>
+            <li><b>Claude's own calls look like details.</b> Checkpointing every 1,000 rows is a decision you might have made differently, yet it sits in a bullet about <code>export.py</code>.</li>
+            <li><b>Each turn pushes the last one away.</b> The question waiting on you is the end of a paragraph, and the next prompt scrolls it off.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col col-after">
+        <div class="bfaf">
+          <div class="bfaf-step">
+            <span class="bfaf-tag after">After</span><span class="bfaf-cap">What was delivered, Claude's own calls, what it needs</span>
+          </div>
+        <div class="mini" data-cycle="ask work give">
+          <div class="mini-body">
+            <div class="move"><b>Waiting on you</b><span>Should Claude draft a plan to split the export job into two steps?</span></div>
+            <div class="strip"><i></i><span class="line"></span><i class="ring"></i><span class="line"></span><i class="piv"></i><span class="line"></span><i class="cur"></i><span>turn 4</span></div>
+            <div class="turn">
+              <div class="beat b-ask" data-show="ask"><h4>You asked</h4><p>Make exports resumable after a crash; keep the CSV format.</p></div>
+              <div class="beat b-work" data-show="work" data-hint><h4>Worked it out</h4><p><span class="pill">1 own call</span></p><p>Checkpoint every 1,000 rows instead of every row.</p></div>
+              <div class="beat b-give on" data-show="give"><h4>Delivered</h4><p>Exports pick up where they stopped. 38 files changed.</p></div>
+            </div>
+            <div class="swap">
+            <div class="panel p-ask" data-pane="ask">
+              <p class="lead">One request and one constraint, both handled.</p>
+              <div class="part"><b>Request</b><span>Make exports resumable after a crash</span><em>done</em></div>
+              <div class="part"><b>Constraint</b><span>Keep the CSV format</span><em>kept</em></div>
+            </div>
+            <div class="panel p-work" data-pane="work">
+              <p class="lead">One call Claude made on its own, and what it found.</p>
+              <div class="part"><b>Own call</b><span>Checkpoint every 1,000 rows, because a write per row is too slow on big tables.</span></div>
+              <div class="part"><b>Found</b><span>A failing snapshot test showed a resume could mix two snapshots, so a changed source now restarts from row 0.</span></div>
+              <div class="part"><b>Read</b><span><code>export.py</code> <code>jobs/runner.py</code> and 10 more</span></div>
+            </div>
+            <div class="panel on" data-pane="give">
+              <p class="lead">A crashed export now resumes from its last checkpoint instead of starting over.</p>
+              <div class="ba">
+                <small>What changed</small>
+                <div><b>After a crash</b><span class="bf">starts from row 1</span><em>→</em><span class="af">resumes at the last 1,000</span></div>
+                <div><b>Extra cost</b><span class="bf">none</span><em>→</em><span class="af">1 small write per 1,000 rows</span></div>
+              </div>
+              <div class="files"><span>38 files · +1,146 −92</span><span>most changed: <code>utils/csv_out.py</code> <code>resume.py</code> <code>db/snapshots.py</code></span></div>
+            </div>
+            </div>
+            <a class="cmlink" href="#change-maps"><b>Walk through the code changes, group by group →</b><span>6 groups, 1,238 lines</span></a>
+          </div>
+        </div>
+        </div>
+        <div class="tool-pay">
+          <p class="side pay-side">How turn maps fix it</p>
+          <ul>
+            <li><b>What was delivered, and how,</b> without reading the whole reasoning trace and terminal output.</li>
+            <li><b>Code changes, broken down.</b> When a turn edits code, its turn card links to a change map that splits the edit into small, explained diffs.</li>
+            <li><b>What needs your attention,</b> given your goal: the decisions Claude made on its own judgment, and what it's waiting on you for.</li>
+          </ul>
+          <p class="where">Writes one page per session and one card per turn.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- Change maps -->
+    <article class="tool" id="change-maps">
+      <div class="tool-head">
+        <div class="tool-title"><h3>Each code change <span class="tname">Change maps</span></h3><span class="when">part of turn maps · for every turn that edits code</span></div>
+        <p class="ask">What is each part of this edit for?</p>
+        <p class="goal">An AI produces hundreds of lines in a single turn, and code is hard to read. Change maps break that change into several small diffs you understand one at a time.</p>
+      </div>
+      <div class="col col-before">
+        <div class="bfaf">
+          <div class="bfaf-step">
+            <span class="bfaf-tag before">Before</span><span class="bfaf-cap">The same edit as Claude Code prints it, file by file</span>
+          </div>
+          <div class="tty short" aria-hidden="true">
+            <pre><span class="g">●</span> <span class="h">Write</span>(checkpoint.py)
+    ⎿  Wrote 22 lines to checkpoint.py
+         1 import json, os
+         2 CKPT_DIR = os.environ.get("CKPT_DIR", ".ckpt")
+         3 def save(job, row):
+         4     with open(_path(job), "w") as f:
+         5         json.dump({"row": row, "snap": job.snapshot_id}, f)
+  <span class="t">     … +17 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(export.py)
+    ⎿  Updated export.py with 48 additions and 6 removals
+         84   def write_rows(job, rows):
+  <span class="d">       85 -     for row in rows:</span>
+  <span class="d">       86 -         writer.writerow(row)</span>
+  <span class="a">       85 +     start = resume.start_row(job)</span>
+  <span class="a">       86 +     for i, row in enumerate(rows, 1):</span>
+  <span class="a">       87 +         if i &lt;= start: continue</span>
+  <span class="a">       88 +         writer.writerow(row)</span>
+  <span class="a">       89 +         if i % 1000 == 0: checkpoint.save(job, i)</span>
+  <span class="t">     … +41 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(resume.py)
+    ⎿  Updated resume.py with 61 additions and 9 removals
+  <span class="d">       12 - def start_row(job): return 0</span>
+  <span class="a">       12 + def start_row(job):</span>
+  <span class="a">       13 +     ck = checkpoint.load(job)</span>
+  <span class="a">       14 +     if not ck: return 0</span>
+  <span class="a">       15 +     if ck["snap"] != job.snapshot_id:</span>
+  <span class="a">       16 +         return 0</span>
+  <span class="a">       17 +     return ck["row"]</span>
+  <span class="t">     … +52 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(jobs/runner.py)
+    ⎿  Updated jobs/runner.py with 52 additions and 9 removals
+         41   def run(job):
+  <span class="d">       42 -     result = job.start()</span>
+  <span class="a">       42 +     state = load_state(job)</span>
+  <span class="a">       43 +     result = job.start(state)</span>
+  <span class="t">     … +49 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(db/snapshots.py)
+    ⎿  Updated db/snapshots.py with 58 additions and 7 removals
+  <span class="a">       30 + def current_id(table):</span>
+  <span class="a">       31 +     return _latest(table).id</span>
+  <span class="t">     … +56 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(utils/csv_out.py)
+    ⎿  Updated utils/csv_out.py with 66 additions and 11 removals
+  <span class="d">       18 -     self.f = open(path, "w")</span>
+  <span class="a">       18 +     self.f = open(path, "a" if resume else "w")</span>
+  <span class="t">     … +64 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Update</span>(jobs/retry.py)
+    ⎿  Updated jobs/retry.py with 33 additions and 8 removals
+  <span class="t">     … +31 lines (ctrl+o to expand)</span>
+  
+  <span class="g">●</span> <span class="h">Write</span>(tests/test_resume.py)
+    ⎿  Wrote 86 lines to tests/test_resume.py
+  <span class="t">     … +84 lines (ctrl+o to expand)</span></pre>
+            <span class="more">…and 32 more files this turn</span>
+          </div>
+        </div>
+        <div class="tool-debt">
+          <p class="side debt-side">What goes wrong</p>
+          <ul class="debts">
+            <li><b>Read by file, not by purpose.</b> A diff lists lines top to bottom, so nothing groups the edits that work together.</li>
+            <li><b>No structure.</b> Nothing says which edits deliver the change and which only make them possible.</li>
+            <li><b>Unclear parts compound.</b> Code you only half understand stays that way, and the next turn builds on it.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col col-after">
+        <div class="bfaf">
+          <div class="bfaf-step">
+            <span class="bfaf-tag after">After</span><span class="bfaf-cap">The same edit as 6 small groups, each with its purpose</span>
+          </div>
+          <div class="mini" data-cycle="g1 g2 g3 g4 g5 g6">
+            <div class="mini-body">
+              <div class="bd">
+                <div class="bdtree">
+                  <div class="whole"><small>The whole change</small>Exports resume after a crash</div>
+                  <ul>
+                    <li class="delivers"><span class="stem"></span><span class="gcard on" data-show="g2" title="Saves the last row written every 1,000 rows"><span class="hd"><span class="num">2</span>Save progress</span><span class="sz">8 files +286 −31</span></span>
+                      <ul><li class="enables"><span class="stem"></span><span class="gcard" data-show="g1" title="Stores each job's last saved row"><span class="hd"><span class="num">1</span>Checkpoint store</span><span class="sz">5 files +212 −4</span></span></li></ul>
+                    </li>
+                    <li class="delivers"><span class="stem"></span><span class="gcard" data-show="g3" title="Restarts a job from its last checkpoint"><span class="hd"><span class="num">3</span>Resume an export</span><span class="sz">9 files +301 −28</span></span>
+                      <ul><li class="enables"><span class="stem"></span><span class="gcard" data-show="g4" title="Tells a resume whether the source changed"><span class="hd"><span class="num">4</span>Source snapshots</span><span class="sz">6 files +164 −12</span></span></li><li class="enables"><span class="stem"></span><span class="gcard" data-show="g5" title="Carries job state across a restart"><span class="hd"><span class="num">5</span>Job runner</span><span class="sz">4 files +97 −17</span></span></li></ul>
+                    </li>
+                    <li class="aside"><span class="stem"></span><span class="gcard" data-show="g6" title="Checks a resumed export matches a clean one"><span class="hd"><span class="num">6</span>Tests</span><span class="sz">6 files +86</span></span></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="groups"><b data-show="g1">1 Store</b><b class="on" data-show="g2">2 Save</b><b data-show="g3" data-hint>3 Resume</b><b data-show="g4">4 Snapshots</b><b data-show="g5">5 Runner</b><b data-show="g6">6 Tests</b></div>
+              <div class="swap">
+              <div class="group" data-pane="g1">
+                <h5>Give each job a place to save progress</h5>
+                <div class="step"><span>1</span><p><code>save()</code> writes the job's last row and its source snapshot to a small file.</p></div>
+                <div class="step"><span>2</span><p><code>load()</code> reads it back, so a new run can find it.</p></div>
+                <div class="diff"><span class="a">+def save(job, row):</span>
+<span class="a">+    json.dump({"row": row, "snap": job.snapshot_id}, f)</span></div>
+              </div>
+              <div class="group" data-pane="g3">
+                <h5>Pick up where the job stopped</h5>
+                <div class="step"><span>1</span><p>A restarted job asks <code>start_row()</code> where to begin.</p></div>
+                <div class="step"><span>2</span><p>If the source changed since the checkpoint, it starts again from row 0.</p></div>
+                <div class="diff"><span class="a">+    ck = checkpoint.load(job)</span>
+<span class="a">+    if ck["snap"] != job.snapshot_id: return 0</span></div>
+              </div>
+              <div class="group" data-pane="g4">
+                <h5>Tell whether the source has changed</h5>
+                <div class="step"><span>1</span><p>Each job records the id of the snapshot it started from.</p></div>
+                <div class="step"><span>2</span><p>A resume compares that id with the current one.</p></div>
+                <div class="diff"><span class="a">+def current_id(table):</span>
+<span class="a">+    return _latest(table).id</span></div>
+              </div>
+              <div class="group" data-pane="g5">
+                <h5>Carry job state across a restart</h5>
+                <div class="step"><span>1</span><p>The runner loads saved state before it starts a job.</p></div>
+                <div class="step"><span>2</span><p>Retries go through the same path, so they resume too.</p></div>
+                <div class="diff"><span class="a">+    state = load_state(job)</span>
+<span class="a">+    result = job.start(state)</span></div>
+              </div>
+              <div class="group" data-pane="g6">
+                <h5>Prove a resumed export is correct</h5>
+                <div class="step"><span>1</span><p>A test stops an export partway through and starts it again.</p></div>
+                <div class="step"><span>2</span><p>It checks the finished CSV matches one from a clean run.</p></div>
+                <div class="diff"><span class="a">+def test_resume_matches_clean_run(tmp_path):</span>
+<span class="a">+    assert resumed(tmp_path) == clean(tmp_path)</span></div>
+              </div>
+              <div class="group on" data-pane="g2">
+                <h5>Save progress while an export runs</h5>
+                <div class="step"><span>1</span><p>The writer counts rows as it writes them.</p></div>
+                <div class="step"><span>2</span><p>Every 1,000 rows it saves the last row written.</p></div>
+                <div class="step"><span>3</span><p>A crash now loses at most one batch.</p></div>
+                <div class="diff"><span class="a">+    for i, row in enumerate(rows, 1):</span>
+<span class="a">+        if i % 1000 == 0: checkpoint.save(job, i)</span></div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tool-pay">
+          <p class="side pay-side">How change maps fix it</p>
+          <ul>
+            <li><b>The breakdown first.</b> A tree drawn sideways shows the whole change, the groups that deliver it, and the groups that make those possible.</li>
+            <li><b>Virtual diffs.</b> Each group of edits has its own objective, the background you need, the steps it adds, and how it serves the larger goal of the change.</li>
+          </ul>
+          <p class="where">Linked from each turn's card in turn maps and from visual docs' How it was built tab.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- PR maps -->
+    <article class="tool" id="pr-maps">
+      <div class="tool-head">
+        <div class="tool-title"><h3>Each pull request <span class="tname">PR maps</span></h3><span class="when">updates when a PR opens and after every push</span></div>
+        <p class="ask">What is this PR for, and how does each part serve it?</p>
+        <p class="goal">Creates a web page for each pull request that explains it, then breaks its diff into smaller virtual diffs, each explained against what the PR is for.</p>
+      </div>
+      <div class="col col-before">
+        <div class="bfaf">
+          <div class="bfaf-step">
+            <span class="bfaf-tag before">Before</span><span class="bfaf-cap">What reviewers usually get: one line and the whole diff</span>
+          </div>
+          <div class="prv" aria-hidden="true">
+            <div class="prv-h"><b>Make exports resumable</b><span>#42 · 38 files changed · +1,146 −92</span></div>
+            <p class="prv-desc">Adds checkpointing so exports can resume. Tests updated.</p>
+            <div class="prv-file"><code>checkpoint.py</code><span>+22</span></div>
+            <pre class="prv-diff"><span class="a">+def save(job, row):</span>
+  <span class="a">+    with open(_path(job), "w") as f:</span>
+  <span class="a">+        json.dump({"row": row, "snap": job.snapshot_id}, f)</span></pre>
+            <div class="prv-file"><code>export.py</code><span>+48 −6</span></div>
+            <pre class="prv-diff"><span class="d">-    for row in rows:</span>
+  <span class="a">+    start = resume.start_row(job)</span>
+  <span class="a">+    for i, row in enumerate(rows, 1):</span>
+  <span class="a">+        if i &lt;= start: continue</span></pre>
+            <div class="prv-file"><code>resume.py</code><span>+61 −9</span></div>
+            <pre class="prv-diff"><span class="d">-def start_row(job): return 0</span>
+  <span class="a">+def start_row(job):</span>
+  <span class="a">+    ck = checkpoint.load(job)</span>
+  <span class="a">+    if ck["snap"] != job.snapshot_id: return 0</span></pre>
+            <span class="more">…38 files, 1,238 lines to read</span>
+          </div>
+        </div>
+        <div class="tool-debt">
+          <p class="side debt-side">What goes wrong</p>
+          <ul class="debts">
+            <li><b>Purpose reverse-engineered from code.</b> With a one-line description and the whole diff, reviewers work out what the PR is for before they can judge it.</li>
+            <li><b>No picture of how it runs.</b> Reviewers trace the changed code file by file to see how it fits together.</li>
+            <li><b>Review time goes to understanding.</b> Most of it is spent building the mental model the author already had.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col col-after">
+        <div class="bfaf">
+          <div class="bfaf-step">
+            <span class="bfaf-tag after">After</span><span class="bfaf-cap">Background, a flow diagram and the diff in explained groups</span>
+          </div>
+          <div class="mini">
+            <div class="mini-body">
+              <div class="objective"><small>Objective</small><p>Large exports survive a crash and resume where they stopped.</p></div>
+              <div class="bgnd">
+                <small>Background</small>
+                <p>Exports run as one long job; today a crash at row 90,000 starts over from row 1.</p>
+                <div class="concepts"><b>Job runner</b><b>Checkpoint files</b><b>Source snapshots</b></div>
+              </div>
+              <div class="flow tight"><b>Start</b><em>→</em><b class="new" data-show="p2">Read checkpoint</b><em>→</em><b data-show="p1">Write rows</b><em>→</em><b data-show="p1">Save progress</b></div>
+              <div class="groups"><b data-show="p1">1 · Save progress</b><b class="on" data-show="p2">2 · Resume a stopped export</b><b data-show="p3" data-hint>3 · Checkpoint store</b><b data-show="p4">4 · Source snapshots</b><b data-show="p5">5 · Job runner</b><b data-show="p6">6 · Tests</b></div>
+              <div class="swap">
+              <div class="group" data-pane="p1">
+                <h5>Save progress while an export runs</h5>
+                <div class="step"><span>1</span><p>The writer counts rows and saves the last one written every 1,000 rows.</p></div>
+                <div class="step"><span>2</span><p>A crash now loses at most one batch, which is the trade this PR makes for speed.</p></div>
+              </div>
+              <div class="group" data-pane="p3">
+                <h5>Store each job's checkpoint</h5>
+                <div class="step"><span>1</span><p>Each job keeps its last row and source snapshot in its own file under <code>.ckpt/</code>.</p></div>
+                <div class="step"><span>2</span><p><code>CKPT_DIR</code> moves that folder, so the other two groups don't need to know where it lives.</p></div>
+              </div>
+              <div class="group" data-pane="p4">
+                <h5>Tell whether the source has changed</h5>
+                <div class="step"><span>1</span><p>Each job records the snapshot it started from, and a resume compares it with the current one.</p></div>
+                <div class="step"><span>2</span><p>That comparison is what stops an export mixing two snapshots.</p></div>
+              </div>
+              <div class="group" data-pane="p5">
+                <h5>Carry job state across a restart</h5>
+                <div class="step"><span>1</span><p>The runner loads saved state before it starts a job.</p></div>
+                <div class="step"><span>2</span><p>Retries take the same path, so a retry resumes instead of starting over.</p></div>
+              </div>
+              <div class="group" data-pane="p6">
+                <h5>Prove a resumed export is correct</h5>
+                <div class="step"><span>1</span><p>A test stops an export partway through and starts it again.</p></div>
+                <div class="step"><span>2</span><p>It checks the finished CSV matches one from a clean run.</p></div>
+              </div>
+              <div class="group on" data-pane="p2">
+                <h5>Resume a stopped export</h5>
+                <div class="step"><span>1</span><p>On start, the job reads its last checkpoint and skips rows already written.</p></div>
+                <div class="step"><span>2</span><p>If the source table changed since the checkpoint, it restarts from zero rather than mix two snapshots.</p></div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tool-pay">
+          <p class="side pay-side">How PR maps fix it</p>
+          <ul>
+            <li><b>Background first.</b> Where the effort stands, the tools and conventions the PR relies on, and a diagram of how the changed code runs.</li>
+            <li><b>Smaller diffs.</b> A change map breaks the diff into small, manageable groups and shows how each part of the code serves what the PR is for.</li>
+          </ul>
+          <p class="where">Writes <code>.pr-maps/prs/&lt;number&gt;.html</code> and adds a short summary block to the PR description.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- Visual docs -->
+    <article class="tool" id="visual-docs">
+      <div class="tool-head">
+        <div class="tool-title"><h3>The whole codebase <span class="tname">Visual docs</span></h3><span class="when">updates after every turn that changes files</span></div>
+        <p class="ask">Which code is responsible for which product behavior, and how and why was it built that way?</p>
+        <p class="goal">Gives anyone new to your codebase, or you after a break, a picture of how it works and why it was built that way.</p>
+      </div>
+      <div class="col col-before">
+        <div class="bfaf">
+          <div class="bfaf-step">
+            <span class="bfaf-tag before">Before</span><span class="bfaf-cap">A file tree and a README nobody has updated</span>
+          </div>
+          <div class="tty short" aria-hidden="true">
+            <pre><span class="u">$ cat README.md</span>
+  # exports
+  Run `make dev` to start.
+  <span class="t">TODO: document how the job runner works</span>
+  <span class="t">(last edited 14 months ago)</span>
+  
+  <span class="u">$ tree -L 2</span>
+  .
+  ├── export.py
+  ├── resume.py
+  ├── checkpoint.py
+  ├── jobs/
+  │   ├── runner.py
+  │   ├── scheduler.py
+  │   └── retry.py
+  ├── db/
+  │   ├── models.py
+  │   └── snapshots.py
+  └── utils/</pre>
+            <span class="more">…and 214 more files</span>
+          </div>
+        </div>
+        <div class="tool-debt">
+          <p class="side debt-side">What goes wrong</p>
+          <ul class="debts">
+            <li><b>A file tree shows where code is, not what it does.</b> Nothing says which code is responsible for which product behavior.</li>
+            <li><b>Docs fall behind.</b> The README describes the code as it was, not as it is.</li>
+            <li><b>The why is gone.</b> The reasons behind each change lived in chat sessions and terminals nobody can read back.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col col-after">
+        <div class="bfaf">
+          <div class="bfaf-step">
+            <span class="bfaf-tag after">After</span><span class="bfaf-cap">The parts, what each owns, and how one run flows</span>
+          </div>
+          <div class="mini">
+            <div class="mini-body">
+              <div class="tabs"><b class="t1" data-show="v1">How it works</b><b class="t2 on" data-show="v2">How the code works</b><b class="t3" data-show="v3" data-hint>How it was built</b></div>
+              <div class="swap">
+              <div class="vpane" data-pane="v1">
+                <div class="vsec">
+                  <small>What happens when someone runs an export</small>
+                  <div class="flow tight"><b>Export starts</b><em>→</em><b>Crash</b><em>→</em><b class="new">Resumes</b><em>→</em><b>CSV arrives</b></div>
+                </div>
+                <div class="cards">
+                  <div class="card isnew"><div class="k"><i class="shape s-how"></i>Survives a crash</div><p>A large export picks up where it stopped instead of starting over.</p></div>
+                  <div class="card"><div class="k"><i class="shape s-dec"></i>Never mixes data</div><p>If the source changed, the export starts again from the first row.</p></div>
+                  <div class="card"><div class="k"><i class="shape s-how"></i>Same file</div><p>You still get the same CSV format as before.</p></div>
+                </div>
+              </div>
+              <div class="vpane" data-pane="v3">
+                <div class="vsec">
+                  <small>Every change, with why it was made</small>
+                  <div class="hist"><b>Exports resume after a crash</b><span>A crash at row 90,000 restarted the job from row 1.</span><em>change map →</em></div>
+                  <div class="hist"><b>Snapshot the source first</b><span>Rows changing mid-export made files inconsistent.</span><em>change map →</em></div>
+                  <div class="hist"><b>Retry failed jobs</b><span>Brief database errors were failing whole exports.</span><em>change map →</em></div>
+                </div>
+              </div>
+              <div class="vpane on" data-pane="v2">
+              <div class="vsec">
+                <small>The parts, and what each one owns</small>
+                <div class="cards">
+                  <div class="card"><div class="k"><i class="shape s-how"></i>Export job</div><code>export.py</code><p>Runs an export end to end and writes the CSV.</p></div>
+                  <div class="card isnew"><div class="k"><i class="shape s-dec"></i>Checkpoint store</div><code>checkpoint.py</code><p>Remembers the last row each job saved.</p></div>
+                  <div class="card"><div class="k"><i class="shape s-how"></i>Resume</div><code>resume.py</code><p>Decides where a restarted job picks up.</p></div>
+                </div>
+              </div>
+              <div class="vsec">
+                <small>One run, start to finish</small>
+                <div class="flow tight"><b>Start</b><em>→</em><b class="new">Read checkpoint</b><em>→</em><b>Write rows</b><em>→</em><b>Save progress</b><em>→</em><b>CSV</b></div>
+              </div>
+              </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="tool-pay">
+          <p class="side pay-side">How visual docs fix it</p>
+          <ul>
+            <li><b>How it works</b> explains the product, the way its user experiences it.</li>
+            <li><b>How the code works</b> explains the structure and parts of the codebase: what each part owns and how one run flows through it.</li>
+            <li><b>How it was built</b> lists the history of changes, each with why and how it was made at the time it was made.</li>
+            <li><b>It keeps itself current.</b> The docs update after every turn that changes files.</li>
+          </ul>
+          <p class="where">Writes <code>.visual-docs/docs.html</code>, plus one page per part of a larger repo.</p>
+        </div>
+      </div>
+    </article>
+
+  </section>
+
+  <section class="band" id="principles">
+    <div class="band-h">
+      <div><p class="eyebrow">Principles</p><h2 style="margin-top:12px">The rules it runs by.</h2></div>
+      <p>The rules every tool follows.</p>
+    </div>
+    <div class="principles">
+      <div><h3><i class="shape s-warn"></i>What if an explanation is wrong?</h3><p>It can be, so it stays checkable. Each step of a change map is pinned to a real hunk and shown with its diff, a symbol not found in that hunk is dropped, every hunk appears exactly once, and a turn's sources are its real tool calls.</p></div>
+      <div><h3><i class="shape s-dec"></i>Pictures before prose</h3><p>Flows, diagrams, before-and-after tables and breakdown trees show the big picture at a glance, so you understand how things fit before reading any detail.</p></div>
+      <div><h3><i class="shape s-how"></i>Pages stay in your repo</h3><p>Pages are plain HTML files in your repo, with no InTheLoop server or account. Your code and conversation reach the model only through Claude Code. The one thing written elsewhere is a short summary block in the PR description.</p></div>
+    </div>
+  </section>
+
+  <section class="band" id="install">
+    <div class="install">
+      <div>
+        <p class="eyebrow">Install</p>
+        <h2 style="margin-top:12px;font-size:clamp(28px,3.4vw,40px);line-height:1.08;font-weight:800">All four tools, one command.</h2>
+        <ul class="needs">
+          <li><b>Claude Code</b>, logged in. The tools call <code>claude -p</code> with your login.</li>
+          <li><b>Python 3.10+</b>, standard library only. Nothing to pip install.</li>
+          <li><b>git</b>, strongly recommended; PR maps require it.</li>
+          <li><b>GitHub CLI</b>, logged in with <code>gh auth login</code>, for PR maps.</li>
+        </ul>
+      </div>
+      <div>
+        <pre class="term" id="cmd"><span class="c"># install all four tools into a repo</span>
+<span class="p">$</span> doc-agent/install.sh /path/to/your/repo
+<span class="c"># then run /hooks in Claude Code to load the hooks</span></pre>
+        <div class="copy"><button type="button" id="copy-btn">Copy command</button><span id="copy-msg" role="status"></span></div>
+        <table class="paths">
+          <tr><td>Visual docs</td><td><code>&lt;repo&gt;/.visual-docs/docs.html</code></td></tr>
+          <tr><td>Turn maps</td><td><code>&lt;repo&gt;/.turn-maps/index.html</code></td></tr>
+          <tr><td>Change maps</td><td><code>&lt;repo&gt;/.turn-maps/changes/</code></td></tr>
+          <tr><td>PR maps</td><td><code>&lt;repo&gt;/.pr-maps/index.html</code></td></tr>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="band closing">
+    <h2>Keep building fast. Keep knowing what you built.</h2>
+  </section>
+
+  <footer>
+    <span>InTheLoop: turn maps, change maps, PR maps and visual docs for Claude Code.</span>
+  </footer>
+</div>
+
+<script>
+(function () {
+  // The same data as InTheLoop's own main page chart; bar heights are percent of the 96px plot.
+  var rows = {
+    "row-without": [[25, 22, "Session 1", "you follow"], [50, 30, "Session 2", "gap opens"], [75, 34, "Session 3", "gap widens"], [100, 36, "Session 4", "you're guessing"]],
+    "row-with": [[25, 22, "Session 1", "you follow"], [50, 46, "Session 2", "you follow"], [75, 70, "Session 3", "you follow"], [100, 94, "Session 4", "you follow"]]
+  };
+  Object.keys(rows).forEach(function (id) {
+    var bars = document.querySelector("#" + id + " .bars");
+    rows[id].forEach(function (r, i) {
+      var cell = document.createElement("div");
+      cell.className = "cell";
+      cell.style.setProperty("--d", (i * .2) + "s");
+      cell.innerHTML = '<div class="plot">' +
+        '<i class="c" style="height:' + r[0] + '%"></i><i class="k" style="height:' + r[1] + '%"></i></div>' +
+        '<small><b>' + r[2] + '</b>' + r[3] + '</small>';
+      bars.appendChild(cell);
+    });
+  });
+
+  var calm = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (!calm) document.documentElement.classList.add("anim");
+
+  // Interactive pictures. Controls get their roles before the hero clones them, and clicks are delegated,
+  // so the hero's cloned pictures work too; each picture (.mini) keeps its own selection.
+  document.querySelectorAll("[data-show]").forEach(function (c) {
+    c.setAttribute("role", "button");
+    c.setAttribute("tabindex", "0");
+    c.setAttribute("aria-pressed", c.classList.contains("on") ? "true" : "false");
+  });
+  function pick(c) {
+    var box = c.closest(".mini"), key = c.dataset.show;
+    box.classList.remove("hinting");
+    stopMini(box);
+    box.querySelectorAll("[data-show]").forEach(function (x) {
+      var on = x.dataset.show === key;
+      x.classList.toggle("on", on);
+      x.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    box.querySelectorAll("[data-pane]").forEach(function (p) { p.classList.toggle("on", p.dataset.pane === key); });
+  }
+  // A reader's own choice ends that picture's automatic stepping for good.
+  function choose(c) {
+    var m = c.closest(".mini");
+    m._manual = true;
+    stopCycle(m);
+    pick(c);
+  }
+  document.addEventListener("click", function (e) {
+    var c = e.target.closest("[data-show]");
+    if (c) choose(c);
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var c = e.target.closest && e.target.closest("[data-show]");
+    if (c) { e.preventDefault(); choose(c); }
+  });
+
+  // An After picture builds itself piece by piece, in reading order. Only the pane on show takes part, and a click
+  // ends the build at once, so the picture never fights the reader.
+  var PIECES = ".move, .strip > *, .beat, .panel, .panel .lead, .panel .part, .ba small, .ba > div, .files > span, .cmlink, " +
+    ".whole, .bdtree > ul, .bdtree li, .groups > b, .group, .group h5, .step, .diff, .objective, .bgnd > small, .bgnd > p, " +
+    ".concepts > b, .flow > *, .tabs > b, .vsec > small, .card, .hist";
+  function stopMini(m) {
+    clearTimeout(m._built);
+    m.classList.remove("play", "wait");
+    m.querySelectorAll(".st").forEach(function (el) { el.classList.remove("st"); });
+  }
+  function playMini(m, done) {
+    if (calm) return;
+    stopMini(m);
+    var n = 0;
+    m.querySelectorAll(PIECES).forEach(function (el) {
+      if (el.closest("[data-pane]:not(.on)")) return;
+      el.classList.add("st");
+      el.style.setProperty("--i", n++);
+    });
+    void m.offsetWidth; // restart the animations when a slide comes round again
+    m.classList.add("play");
+    m._built = setTimeout(function () { stopMini(m); if (done) done(); }, n * 70 + 500);
+  }
+
+  // In the sections, turn maps and change maps step through their parts (data-cycle) on their own, holding while the
+  // reader hovers or has keyboard focus inside. The hero's copies don't step: the hero is busy enough beside its text.
+  var CYCLE_MS = 4500;
+  function stopCycle(m) { clearInterval(m._cycle); }
+  function held(m) {
+    return m.matches(":hover") || !!m.querySelector(":focus-visible");
+  }
+  function startCycle(m, ms) {
+    stopCycle(m);
+    if (calm || m._manual || !m.dataset.cycle) return;
+    var keys = m.dataset.cycle.split(" ");
+    m._cycle = setInterval(function () {
+      if (held(m)) return;
+      var now = keys.indexOf(m.querySelector("[data-pane].on").dataset.pane);
+      pick(m.querySelector('[data-show="' + keys[(now + 1) % keys.length] + '"]'));
+    }, ms);
+  }
+
+  // A terminal scrolls past on its own, the way a long turn does: down to its last line, a pause there so it can be
+  // read, a quick rewind, then again. It runs only while on screen (stopScroll).
+  var HOLD_MS = 2600, REWIND_MS = 800;
+  function ease(k) { return k * k * (3 - 2 * k); }
+  function stopScroll(pre) { pre._run = (pre._run || 0) + 1; }
+  function scrollPast(pre, ms, wait) {
+    stopScroll(pre);
+    var run = pre._run;
+    pre.scrollTop = 0;
+    if (calm) return;
+    var t0 = performance.now(), cycle = wait + ms + HOLD_MS + REWIND_MS;
+    requestAnimationFrame(function step(t) {
+      if (pre._run !== run) return;
+      var max = pre.scrollHeight - pre.clientHeight;
+      if (max <= 0) return;
+      var c = (t - t0) % cycle, top = 0;
+      if (c >= wait + ms + HOLD_MS) top = max * (1 - ease((c - wait - ms - HOLD_MS) / REWIND_MS));
+      else if (c >= wait + ms) top = max;
+      else if (c >= wait) top = max * ease((c - wait) / ms);
+      pre.scrollTop = top;
+      requestAnimationFrame(step);
+    });
+  }
+
+  // Each side clones its half of a tool section's pair (.bfaf: before on the left, after on the right) at the section's
+  // size, then zooms it to the side's width. Both get the "after" height, as in the section.
+  var sides = document.querySelectorAll(".hero-side");
+  function fitPics() {
+    sides.forEach(function (side, k) {
+      side.querySelectorAll(".pic").forEach(function (pic) {
+        var src = document.querySelectorAll("#" + pic.dataset.clone + " .bfaf");
+        if (!pic.firstChild) pic.appendChild(src[k].cloneNode(true));
+        var c = pic.firstChild, w = src[k].offsetWidth;
+        c.style.width = w + "px"; c.style.height = src[1].offsetHeight + "px"; c.style.zoom = pic.clientWidth / w;
+      });
+    });
+  }
+  fitPics();
+  addEventListener("resize", fitPics);
+  if (document.fonts) document.fonts.ready.then(fitPics);
+
+  // Hero slideshow: each tab's bar fills over 7s and its animationend moves both sides to the next slide,
+  // so hovering a picture, keyboard focus or the pause button (all of which pause the bar) also pause the slideshow.
+  var show = document.querySelector(".show"), cur = 0, dots = show.querySelectorAll(".show-dot");
+  var pressing, PRESS_MS = 900, CLICK_MS = 320;
+  function go(i) {
+    clearTimeout(pressing);
+    show.querySelectorAll(".cmlink.pressing").forEach(function (l) { l.classList.remove("pressing"); });
+    cur = (i + dots.length) % dots.length;
+    sides.forEach(function (side) {
+      side.querySelectorAll(".slide").forEach(function (s, k) {
+        s.classList.toggle("is-on", k === cur);
+        s.querySelectorAll(".tty pre").forEach(function (pre) { if (k === cur) scrollPast(pre, 5200, 500); else stopScroll(pre); });
+        s.querySelectorAll(".mini").forEach(function (m) {
+          stopCycle(m);
+          stopMini(m);
+          if (k === cur) playMini(m);
+        });
+      });
+    });
+    dots.forEach(function (d, k) { d.classList.toggle("is-on", k === cur); d.setAttribute("aria-current", k === cur ? "true" : "false"); });
+  }
+  dots.forEach(function (d, k) {
+    d.addEventListener("click", function () { go(k); });
+    d.querySelector("i").addEventListener("animationend", function () { advance(PRESS_MS); });
+  });
+  // When the turn map's time is up, its link to the change map lights up and presses in, as if clicked, and the next
+  // slide is what that click opens. Choosing a tab goes straight there.
+  function advance(ms) {
+    var link = sides[1].querySelector(".slide.is-on .cmlink");
+    if (!link) { go(cur + 1); return; }
+    if (link.classList.contains("pressing")) return; // already on its way
+    link.classList.add("pressing");
+    pressing = setTimeout(function () { go(cur + 1); }, ms);
+  }
+  // The real thing: in the hero the link opens the next slide; in the turn-maps section it stays a plain page anchor.
+  show.addEventListener("click", function (e) {
+    if (!e.target.closest(".cmlink")) return;
+    e.preventDefault();
+    advance(CLICK_MS);
+  });
+  var pause = show.querySelector(".show-pause");
+  pause.addEventListener("click", function () {
+    var paused = show.classList.toggle("paused");
+    pause.setAttribute("aria-pressed", paused ? "true" : "false");
+    pause.setAttribute("aria-label", paused ? "Play slideshow" : "Pause slideshow");
+    pause.textContent = paused ? "▶" : "❚❚";
+  });
+
+  // Things that start when they come into view: sections rise in, terminals scroll past, pictures hint, the stat counts up.
+  function onView(el, fn, threshold) {
+    var io = new IntersectionObserver(function (es) {
+      if (es.some(function (x) { return x.isIntersecting; })) { io.disconnect(); fn(el); }
+    }, { threshold: threshold || .12 });
+    io.observe(el);
+  }
+  if (!calm) {
+    ["#why .band-h", ".stat", ".payers > small", "#tools .band-h", ".tool-head", ".tool .col", "#principles .band-h", ".install > *", ".closing"].forEach(function (sel) {
+      document.querySelectorAll(sel).forEach(function (el) { el.classList.add("rv"); onView(el, function () { el.classList.add("in"); }, .08); });
+    });
+    [".outcome", ".principles > div"].forEach(function (sel) {
+      document.querySelectorAll(sel).forEach(function (el, i) {
+        el.classList.add("rv");
+        el.style.setProperty("--rv", (i * .08) + "s");
+        onView(el, function () { el.classList.add("in"); }, .08);
+      });
+    });
+    document.querySelectorAll(".tool .tty pre").forEach(function (pre) {
+      new IntersectionObserver(function (es) {
+        if (es[es.length - 1].isIntersecting) scrollPast(pre, Math.max(7000, (pre.scrollHeight - pre.clientHeight) * 9), 700); else stopScroll(pre);
+      }, { threshold: .25 }).observe(pre);
+    });
+    document.querySelectorAll(".tool .mini").forEach(function (m) {
+      m.classList.add("wait");
+      onView(m, function () {
+        playMini(m, function () {
+          m.classList.add("hinting");
+          m._ready = true;
+          if (m._seen) startCycle(m, CYCLE_MS);
+        });
+      }, .2);
+      new IntersectionObserver(function (es) {
+        m._seen = es[es.length - 1].isIntersecting;
+        if (!m._seen) stopCycle(m); else if (m._ready) startCycle(m, CYCLE_MS);
+      }, { threshold: .2 }).observe(m);
+    });
+    // the hero's terminal stops when the hero leaves the screen and picks up again when it returns
+    new IntersectionObserver(function (es) {
+      var on = es[es.length - 1].isIntersecting;
+      show.querySelectorAll(".slide .tty pre").forEach(function (pre) {
+        if (on && pre.closest(".slide").classList.contains("is-on")) scrollPast(pre, 5200, 500); else stopScroll(pre);
+      });
+    }).observe(show);
+    var big = document.querySelector(".stat .big");
+    onView(big, function () {
+      var t0 = performance.now();
+      requestAnimationFrame(function tick(t) {
+        var k = Math.min(1, (t - t0) / 1100), e = 1 - Math.pow(1 - k, 3);
+        big.textContent = Math.round(58 * e) + "\u2013" + Math.round(70 * e) + "%";
+        if (k < 1) requestAnimationFrame(tick);
+      });
+    });
+  }
+
+  go(0);
+
+  var btn = document.getElementById("copy-btn"), msg = document.getElementById("copy-msg");
+  var text = "doc-agent/install.sh /path/to/your/repo";
+  btn.addEventListener("click", function () {
+    function fallback() {
+      var r = document.createRange(); r.selectNodeContents(document.getElementById("cmd"));
+      var s = getSelection(); s.removeAllRanges(); s.addRange(r);
+      msg.textContent = "Selected. Press Cmd+C to copy.";
+    }
+    try {
+      navigator.clipboard.writeText(text).then(function () { msg.textContent = "Copied."; }, fallback);
+    } catch (e) { fallback(); }
+  });
+})();
+</script>
+
+
+
+
+</body>
+</html>
