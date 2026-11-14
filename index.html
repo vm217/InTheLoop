@@ -521,6 +521,21 @@ html.anim .flow b.new::after { animation: newdot 1.6s ease-in-out 3; }
 .bdtree li { padding-left: 10px; } .bdtree .stem { width: 10px; }
 #change-maps .groups b, .pic .groups b { padding: 5px 7px; }
 </style>
+<script>
+/* PostHog: clicks (autocapture), page views and time spent. No cookies or local storage are used. */
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister identify alias people.set people.set_once reset opt_in_capturing opt_out_capturing has_opted_out_capturing onFeatureFlags getFeatureFlag isFeatureEnabled reloadFeatureFlags group".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https://us.i.posthog.com',persistence:'memory',person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,autocapture:true});
+/* page_time: seconds the tab was actually visible, sent each time the visitor hides or leaves the page (take the largest per visit) */
+(function(){
+  var vis=0,t0=document.visibilityState==='visible'?performance.now():null,sent=-1;
+  function stop(){if(t0!==null){vis+=performance.now()-t0;t0=null}}
+  function send(){var s=Math.round(vis/1000);if(s===sent)return;sent=s;
+    var p={seconds:s};if(window.demoWatched)p.watched_seconds=Math.round(window.demoWatched());
+    posthog.capture('page_time',p,{transport:'sendBeacon'})}
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){stop();send()}else t0=performance.now()});
+  addEventListener('pagehide',function(){stop();send()});
+})();
+</script>
 </head>
 <body>
 

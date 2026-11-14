@@ -178,6 +178,21 @@ svg text{font-family:var(--sans)}
 .place .fix{position:absolute;left:28px;right:28px;bottom:28px;padding-top:18px;border-top:1px solid var(--line);font-size:24px;font-weight:650;display:flex;align-items:center;gap:10px}
 .place .fix i{font-style:normal;font:500 16px var(--mono);color:var(--dim);margin-left:auto}
 </style>
+<script>
+/* PostHog: clicks (autocapture), page views and time spent. No cookies or local storage are used. */
+!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister identify alias people.set people.set_once reset opt_in_capturing opt_out_capturing has_opted_out_capturing onFeatureFlags getFeatureFlag isFeatureEnabled reloadFeatureFlags group".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
+posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https://us.i.posthog.com',persistence:'memory',person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,autocapture:true});
+/* page_time: seconds the tab was actually visible, sent each time the visitor hides or leaves the page (take the largest per visit) */
+(function(){
+  var vis=0,t0=document.visibilityState==='visible'?performance.now():null,sent=-1;
+  function stop(){if(t0!==null){vis+=performance.now()-t0;t0=null}}
+  function send(){var s=Math.round(vis/1000);if(s===sent)return;sent=s;
+    var p={seconds:s};if(window.demoWatched)p.watched_seconds=Math.round(window.demoWatched());
+    posthog.capture('page_time',p,{transport:'sendBeacon'})}
+  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){stop();send()}else t0=performance.now()});
+  addEventListener('pagehide',function(){stop();send()});
+})();
+</script>
 </head>
 <body>
 <div id="stage">
@@ -565,13 +580,18 @@ if(!location.search.includes('render')){
   fit();addEventListener('resize',fit);
   const fmt=x=>`${Math.floor(x/60)}:${String(Math.floor(x%60)).padStart(2,'0')}`;$('#td').textContent=fmt(DURATION);
   const q=new URLSearchParams(location.search);let T=Math.min(DURATION,+q.get('t')||0),playing=true,last=performance.now(),drag=false;
+  // analytics: the hosted copy loads PostHog; without it (local preview, render) these calls do nothing
+  const track=(name,props)=>{try{window.posthog&&posthog.capture(name,props)}catch(e){}};
+  let watched=0,mark=0;window.demoWatched=()=>watched;
   const setPlay=p=>{playing=p;$('#pp').textContent=p?'❚❚':'▶'};
-  $('#pp').onclick=()=>{if(!playing&&T>=DURATION)T=0;setPlay(!playing)};
+  $('#pp').onclick=()=>{if(!playing&&T>=DURATION)T=0;setPlay(!playing);track(playing?'demo_play':'demo_pause',{at_seconds:Math.round(T)})};
   $('#sk').addEventListener('input',e=>{drag=true;T=+e.target.value;seek(T)});
-  $('#sk').addEventListener('change',()=>{drag=false});
+  $('#sk').addEventListener('change',()=>{drag=false;track('demo_seek',{to_seconds:Math.round(T)})});
   addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.key!==' ')return;if(e.key===' '&&e.target.id==='pp')return;
     if(e.key===' '){e.preventDefault();$('#pp').click()} else if(e.key==='ArrowRight')T=Math.min(DURATION,T+5); else if(e.key==='ArrowLeft')T=Math.max(0,T-5)});
-  (function loop(now){const dt=(now-last)/1000;last=now;if(playing&&!drag){T+=dt;if(T>=DURATION){T=DURATION;setPlay(false)}}
+  (function loop(now){const dt=(now-last)/1000;last=now;if(playing&&!drag){T+=dt;watched+=Math.min(dt,.25);
+      const m=Math.min(4,Math.floor(watched/DURATION*4));if(m>mark){mark=m;track('demo_progress',{percent_watched:m*25})}
+      if(T>=DURATION){T=DURATION;setPlay(false);track('demo_finished',{watched_seconds:Math.round(watched)})}}
     seek(Math.min(T,DURATION-0.001));if(!drag)$('#sk').value=T;$('#sk').style.setProperty('--p',(T/DURATION*100)+'%');$('#tc').textContent=fmt(T);requestAnimationFrame(loop)})(performance.now());
 }else seek(0);
 </script>
