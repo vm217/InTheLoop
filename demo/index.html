@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>InTheLoop demo</title>
+<style>
+:root{
+  --bg:#090b10; --panel:#10131a; --panel2:#151924; --line:#232837; --line2:#2d3344;
+  --ink:#e8eaf0; --mute:#8b92a5; --dim:#5b6274;
+  --blue:#6ea8ff; --amber:#f2b65c; --green:#5fd39a; --red:#ff6f6f; --purple:#b48cff; --pill:#c2414b;
+  --sans:"SF Pro Display",-apple-system,"Helvetica Neue",Inter,sans-serif;
+  --mono:"SF Mono",Menlo,"JetBrains Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);overflow:hidden}
+body{width:1920px;height:1080px;font-family:var(--sans);color:var(--ink);-webkit-font-smoothing:antialiased}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden}
+#bg{position:absolute;inset:0}
+svg text{font-family:var(--sans)}
+#bg .grid{position:absolute;inset:-40px;background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px);background-size:48px 48px;mask-image:radial-gradient(ellipse at 50% 40%,#000 30%,transparent 75%)}
+#bg .glow{position:absolute;width:1400px;height:1400px;border-radius:50%;filter:blur(40px);opacity:.55}
+.scene{position:absolute;inset:0;display:none;transform-origin:50% 50%}
+.c{position:absolute;left:0;right:0;text-align:center}
+.eyebrow{font:600 20px/1 var(--mono);letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
+.h1{font-weight:700;font-size:76px;letter-spacing:-.025em;line-height:1.08}
+.h2{font-weight:650;font-size:52px;letter-spacing:-.02em;line-height:1.12}
+.sub{font-size:28px;color:var(--mute);line-height:1.45}
+.grad{background:linear-gradient(90deg,#9cc3ff,#c9a6ff 55%,#7fe0b0);-webkit-background-clip:text;color:transparent}
+.mono{font-family:var(--mono)}
+
+/* windows */
+.win{position:absolute;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 40px 100px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.02) inset}
+.bar{height:44px;display:flex;align-items:center;gap:8px;padding:0 18px;border-bottom:1px solid var(--line);background:#0d1017;font:15px var(--mono);color:var(--dim)}
+.bar i{width:11px;height:11px;border-radius:50%;background:#2a2f3d;display:inline-block}
+.bar span{margin-left:12px}
+.body{position:absolute;top:44px;left:0;right:0;bottom:0;overflow:hidden}
+
+/* terminal */
+.term{font:17px/1.62 var(--mono);color:#b9bfcc;padding:18px 24px;white-space:pre}
+.term .p{color:var(--ink)} .term .t{color:var(--ink)} .term .k{color:#d0d4de;font-weight:600}
+.term .g{color:var(--dim)} .term .a{color:var(--green)} .term .r{color:var(--red)} .term .th{color:#8a7fb8;font-style:italic}
+.term .dot{color:var(--green)}
+.fadeb{position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(transparent,var(--panel))}
+
+/* compare scenes */
+.hdr{position:absolute;top:70px;left:0;right:0;text-align:center}
+.hdr .h2{margin-top:18px}
+.tag{position:absolute;top:226px;display:flex;align-items:center;gap:10px;font:600 19px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.tag b{width:10px;height:10px;border-radius:50%}
+.L{left:90px} .R{left:990px}
+.cmpwin{top:266px;width:840px;height:640px}
+.cap{position:absolute;top:936px;width:840px;font-size:30px;font-weight:600;display:flex;align-items:center;gap:14px}
+.cap.l{color:var(--mute)} .cap.l s{text-decoration-color:rgba(255,111,111,.7);text-decoration-thickness:2px}
+.cap.r{color:var(--green)}
+.cap small{font:500 18px var(--mono);color:var(--dim);letter-spacing:.06em;text-transform:uppercase}
+
+/* diff */
+.diff{font:15.5px/1.55 var(--mono);white-space:pre;color:#aab0bd}
+.diff div{padding:0 18px}
+.diff .ad{background:rgba(95,211,154,.10);color:#a8ecc6}
+.diff .rm{background:rgba(255,111,111,.10);color:#ffb3b3}
+.diff .hh{color:#7f8cff;background:rgba(127,140,255,.07)}
+.diff .fh{color:var(--ink);background:#181c27;font-weight:600;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:6px 18px}
+
+/* map pieces */
+.card{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:16px 18px;position:relative}
+.card .k{font:600 13px var(--mono);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.card .v{font-size:19px;line-height:1.4;color:var(--ink)}
+.card.blue{border-top:3px solid var(--blue)} .card.blue .k{color:var(--blue)}
+.card.amber{border-top:3px solid var(--amber)} .card.amber .k{color:var(--amber)}
+.card.green{border-top:3px solid var(--green)} .card.green .k{color:var(--green)}
+.chip{display:inline-flex;align-items:center;gap:6px;font:600 13px var(--mono);padding:4px 9px;border-radius:999px;border:1px solid var(--line2);color:var(--mute)}
+.wait{border:1px solid rgba(110,168,255,.45);background:rgba(110,168,255,.08);border-radius:12px;padding:14px 18px}
+.wait .k{color:var(--blue);font:600 13px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.wait .v{font-size:21px;margin-top:6px}
+.btns{display:flex;gap:10px;margin-top:10px}
+.btn{font:600 15px var(--sans);padding:7px 14px;border-radius:8px;border:1px solid var(--line2);color:var(--ink)}
+.btn.pri{background:var(--blue);color:#081020;border-color:var(--blue)}
+.ba{display:grid;grid-template-columns:150px 1fr 30px 1fr;gap:8px 12px;align-items:center;font-size:17px}
+.ba .a{color:var(--mute);font:600 13px var(--mono);letter-spacing:.08em;text-transform:uppercase}
+.ba .b{color:#c9a3a3} .ba .n{color:#b9f0d3} .ba .x{color:var(--dim)}
+.files{display:flex;gap:10px;flex-wrap:wrap}
+.f{font:14px var(--mono);padding:5px 10px;border-radius:7px;background:#0d1017;border:1px solid var(--line);color:#c4c9d4}
+.f .a{color:var(--green)} .f .r{color:var(--red)}
+.pill{font:700 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;background:var(--pill);color:#fff;padding:4px 9px;border-radius:999px}
+.sec{font:600 13px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.node{position:absolute;background:var(--panel2);border:1px solid var(--line2);border-radius:10px;padding:10px 14px;font-size:16px}
+.node .n{font:700 13px var(--mono);color:var(--mute)}
+.node .t{font-weight:600;font-size:17px;margin-top:2px}
+.node .s{font:13px var(--mono);color:var(--dim);margin-top:4px}
+.flow{display:flex;align-items:center;gap:8px;flex-wrap:nowrap}
+.fn{font-size:15px;padding:7px 11px;border-radius:999px;border:1px solid var(--line2);background:#0d1017;white-space:nowrap}
+.fn.trig{border-color:#cfd3dc;color:var(--ink);font-weight:600}
+.fn.new{border-color:rgba(95,211,154,.6);color:#b9f0d3;background:rgba(95,211,154,.07)}
+.fn.bad{border-color:rgba(255,111,111,.5);color:#ffc2c2}
+.fa{color:var(--dim);font-size:15px}
+.step{display:flex;gap:14px;align-items:flex-start;margin:10px 0}
+.step .no{flex:none;width:28px;height:28px;border-radius:50%;background:rgba(110,168,255,.15);color:var(--blue);font:700 14px var(--mono);display:flex;align-items:center;justify-content:center}
+.step .tx{font-size:18px;line-height:1.4}
+
+/* ide */
+.tree{font:15px/1.75 var(--mono);color:#a3a9b6;padding:12px 0}
+.tree div{padding-left:calc(14px + var(--d,0)*18px);white-space:nowrap}
+.tree .hl{background:rgba(242,182,92,.12);color:var(--amber)}
+.tabs{display:flex;border-bottom:1px solid var(--line);background:#0d1017}
+.tabs div{font:14px var(--mono);color:var(--dim);padding:10px 16px;border-right:1px solid var(--line);white-space:nowrap}
+.tabs div.on{color:var(--ink);background:var(--panel)}
+.code{font:15px/1.6 var(--mono);white-space:pre;color:#aab0bd;padding:12px 18px}
+.code .kw{color:#c792ea} .code .fn2{color:#82aaff} .code .st{color:#c3e88d} .code .cm{color:var(--dim)}
+.bubble{position:absolute;background:#1b2030;border:1px solid var(--line2);border-radius:14px;padding:14px 18px;font-size:20px;box-shadow:0 20px 50px rgba(0,0,0,.5)}
+
+/* docs */
+.dtabs{display:flex;gap:6px}
+.dtabs div{font-size:16px;font-weight:600;padding:9px 14px;border-radius:9px;color:var(--mute);border:1px solid transparent}
+.dtabs div.on{color:var(--ink);background:var(--panel2);border-color:var(--line2)}
+.stage{flex:1;background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
+.stage .st{font-weight:650;font-size:17px}
+.stage .ss{font-size:14px;color:var(--mute);margin-top:4px;line-height:1.35}
+.mini{margin-top:10px;border-radius:8px;padding:8px 10px;font-size:14px;line-height:1.35;background:#0d1017;border:1px solid var(--line)}
+.mini.how{border-left:3px solid var(--blue)} .mini.dec{border-left:3px solid var(--amber)}
+.pdot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--purple);box-shadow:0 0 12px var(--purple)}
+
+.term.reply{font-size:15.5px;line-height:1.6}
+.term.reply .pr{color:#cdd2dc} .term.reply .hd{color:var(--ink);font-weight:700}
+.rowwin{width:840px;height:395px}
+.foot{position:absolute;left:0;right:0;bottom:0;height:42px;border-top:1px solid var(--line);background:#0d1017;display:flex;align-items:center;padding:0 18px;font-size:19px;font-weight:600}
+.foot.l{color:var(--mute)} .foot.r{color:var(--green)}
+.node.sm{padding:8px 12px} .node.sm .t{font-size:16px}
+.sf{display:flex;justify-content:space-between;font:14px/1 var(--mono);padding:8px 14px;color:#a3a9b6}
+.sf.on{background:rgba(110,168,255,.10);color:var(--ink);box-shadow:inset 3px 0 var(--blue)}
+.sf .a,.prf .a{color:var(--green)} .sf .r,.prf .r{color:var(--red)}
+.prf{display:flex;align-items:center;gap:12px;padding:9px 18px;border-bottom:1px solid var(--line);font-size:14px;color:#c4c9d4}
+.prf .ld{font:13px var(--sans);color:var(--amber);background:rgba(242,182,92,.08);border:1px solid rgba(242,182,92,.3);border-radius:6px;padding:2px 8px}
+.hl{padding:0 .22em;border-radius:10px;background-repeat:no-repeat;background-position:0 0;background-size:0 100%}
+.hl.add{color:#b9f0d3;background-image:linear-gradient(rgba(95,211,154,.18),rgba(95,211,154,.18));box-shadow:inset 0 -2px rgba(95,211,154,.0)}
+.hl.del{color:#ffb8b8;background-image:linear-gradient(rgba(255,111,111,.18),rgba(255,111,111,.18))}
+.flow.sm .fn{font-size:14px;padding:5px 10px} .flow.sm .fa{font-size:13px}
+.dtabs div.amb{color:var(--amber);background:rgba(242,182,92,.10);border-color:rgba(242,182,92,.45)}
+.h3a{font-size:18px;font-weight:700;color:var(--amber);margin-bottom:8px}
+.part{background:var(--panel2);border:1px solid var(--line);border-top:3px solid var(--amber);border-radius:10px;padding:9px 12px;position:relative}
+.part .pt{font-weight:650;font-size:16px} .part .pt span{color:var(--amber);margin-right:8px}
+.part .po{font-size:14px;color:#b9bfcc;margin-top:3px;line-height:1.35}
+.part .ptr{margin-top:6px;font:12.5px var(--mono);color:#d0d4de} .part .ptr i{font-style:normal;color:var(--dim);margin-left:6px}
+.part.isnew::after{content:"";position:absolute;top:10px;right:10px;width:9px;height:9px;border-radius:50%;background:var(--purple);box-shadow:0 0 10px var(--purple)}
+.lane{position:absolute;left:0;width:800px;height:44px;border-radius:8px;background:rgba(255,255,255,.025);font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--dim);padding:14px 10px}
+.lstep{position:absolute;width:132px;height:36px;border-radius:8px;border:1px solid var(--line2);background:#0d1017;font-size:13.5px;display:flex;align-items:center;justify-content:center;white-space:nowrap}
+.lstep.new{border-color:rgba(95,211,154,.6);color:#b9f0d3}
+.body.real{background:#161614}
+.body.real img.rs{display:block;width:100%}
+.col{position:absolute;left:16px;right:16px;top:12px}
+.col img{display:block;width:100%}
+.secchip{color:var(--ink);border-color:var(--line2);font-size:12px}
+.cmp .L.win,.cmp .cap.L{width:700px}
+.cmp .R{left:830px} .cmp .win.R,.cmp .cap.R{width:1000px}
+.cmp .cmpwin{height:690px} .cmp .cap{top:978px}
+.place{transition:none}
+.place.next{border-color:var(--hue);box-shadow:0 0 0 1px var(--hue),0 0 40px -6px var(--hue)}
+.place .ok{position:absolute;top:24px;right:26px;width:34px;height:34px;border-radius:50%;background:var(--hue);color:#0b0d12;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;opacity:0}
+.place.done .ok{opacity:1} .place.done{border-color:color-mix(in srgb,var(--hue) 45%,var(--line))}
+.tap{position:absolute;width:56px;height:56px;margin:-28px 0 0 -28px;border-radius:50%;border:3px solid #fff;opacity:0;pointer-events:none;box-shadow:0 0 20px rgba(255,255,255,.5)}
+.splitlab{position:absolute;font:500 17px var(--mono);color:var(--mute)} .splitlab b{color:var(--ink)}
+.hk{position:absolute;height:12px;border-radius:3px;font:9.5px/12px var(--mono);color:#c4c9d4;padding-left:6px;background:#1a1f2b;border-left:3px solid;white-space:nowrap;overflow:hidden}
+.gh{position:absolute;width:206px;height:118px;background:var(--panel);border:1px solid var(--line2);border-top:3px solid var(--ink);border-radius:10px;padding:10px 12px}
+.gh .n{font:700 12px var(--mono);color:var(--mute)} .gh .t{font-size:15.5px;font-weight:650;line-height:1.25;margin-top:4px}
+.gh .z{font:12px var(--mono);color:var(--dim);position:absolute;bottom:8px;left:12px}
+.zshot{position:absolute;border-radius:14px;overflow:hidden;background:#161614;border:1px solid var(--line2);box-shadow:0 40px 100px rgba(0,0,0,.6);opacity:0}
+.zshot img{display:block;width:100%}
+.vtabs{position:absolute;left:0;right:0;top:0;height:46px;display:flex;gap:6px;padding:8px 16px;border-bottom:1px solid #2a2925}
+.vtabs div{font-size:15px;font-weight:600;padding:6px 12px;border-radius:8px;color:#9a978f}
+.vtabs div.on{color:var(--h);background:color-mix(in srgb,var(--h) 14%,transparent);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--h) 50%,transparent)}
+.vstage{position:absolute;left:16px;right:16px;top:58px;bottom:0;overflow:hidden}
+.vstage img{position:absolute;left:0;top:0;width:100%;opacity:0}
+/* status-quo cards */
+.place{position:absolute;top:400px;width:390px;height:400px;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:30px 28px}
+.place .no{font:600 18px var(--mono);color:var(--dim)}
+.place .nm{font-size:36px;font-weight:700;margin-top:14px;letter-spacing:-.01em}
+.place .pain{font-size:23px;color:var(--mute);margin-top:18px;line-height:1.4}
+.place .fix{position:absolute;left:28px;right:28px;bottom:28px;padding-top:18px;border-top:1px solid var(--line);font-size:24px;font-weight:650;display:flex;align-items:center;gap:10px}
+.place .fix i{font-style:normal;font:500 16px var(--mono);color:var(--dim);margin-left:auto}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="bg"><div class="glow" id="g1"></div><div class="glow" id="g2"></div><div class="grid"></div></div>
+
+  <!-- 1 · hook -->
+  <section class="scene" id="s1" data-s="0" data-e="7.6">
+    <div class="win" id="s1win" style="left:310px;top:150px;width:1300px;height:780px" data-in="0" data-fx="scale" data-d=".9">
+      <div class="bar"><i></i><i></i><i></i><span>~/doc-agent — claude</span></div>
+      <div class="body"><div class="term" id="s1term"></div><div class="fadeb" style="top:0;bottom:auto;height:0"></div></div>
+    </div>
+    <div class="c" style="top:390px">
+      <div class="h1" data-in="3.0">Your AI agent writes code</div>
+      <div class="h1 grad" data-in="3.55">faster than you can read it.</div>
+      <div class="sub" style="margin-top:30px;font-size:30px" data-in="5.0">One turn: <b class="mono" style="color:var(--ink)" data-count="73" data-in="5.0" data-d="1.4">0</b> tool calls, <b class="mono" style="color:var(--ink)" data-count="49" data-in="5.0" data-d="1.4">0</b> files, <b class="mono" style="color:var(--ink)" data-count="3396" data-in="5.0" data-d="1.4">0</b> changed lines.</div>
+    </div>
+  </section>
+
+  <!-- 2 · the gap -->
+  <section class="scene" id="s2" data-s="7.2" data-e="15">
+    <div class="c" style="top:78px"><div class="eyebrow" data-in=".2">The problem</div>
+      <div class="h2" style="margin-top:20px" data-in=".4">Code grows every session. Your understanding doesn't.</div></div>
+    <svg id="chart1" style="position:absolute;left:310px;top:220px" width="1300" height="600" viewBox="0 0 1300 600"></svg>
+    <div class="c" style="top:850px">
+      <div class="sub" style="font-size:30px;color:var(--ink)" data-in="1.0">That gap is <b style="color:var(--red)">cognitive debt</b>: what your codebase does, minus what you know about it.</div>
+      <div class="sub" style="font-size:22px;margin-top:20px" data-in="1.6">Developers already spend <b style="color:var(--ink)">58%</b> of their time understanding code <span style="color:var(--dim)">(Xia et al., IEEE TSE 2018)</span>. Now an agent writes it for them.</div>
+    </div>
+  </section>
+
+  <!-- 3 · status quo -->
+  <section class="scene" id="s3" data-s="14.6" data-e="86.8">
+   <div id="ovwrap" style="position:absolute;inset:0">
+    <div class="c" style="top:110px"><div class="eyebrow" data-in=".2">The status quo</div>
+      <div class="h2" style="margin-top:20px" data-in=".4">The debt builds up in three places.</div>
+      <div class="sub" style="margin-top:18px" data-in="4.2">InTheLoop closes the gap at each one, while the code is being written.</div></div>
+    <div class="place" id="pl0" style="left:90px;width:560px;--hue:var(--blue)" data-in=".9"><div class="no">01</div><div class="nm">Each turn</div><div class="pain">More arrives each turn than you can take in, including calls the agent made on its own.</div>
+      <div class="fix" data-in="3.2" style="color:var(--blue)">→ What was delivered, and what needs your call</div><div class="ok">✓</div></div>
+    <div class="place" id="pl1" style="left:680px;width:560px;--hue:var(--amber)" data-in="1.1"><div class="no">02</div><div class="nm">Each code change</div><div class="pain">Hundreds of lines arrive in one diff, and whoever reviews it works out from the code what it is for.</div>
+      <div class="fix" data-in="3.45" style="color:var(--amber)">→ What it’s for, then small explained groups</div><div class="ok">✓</div></div>
+    <div class="place" id="pl2" style="left:1270px;width:560px;--hue:var(--green)" data-in="1.3"><div class="no">03</div><div class="nm">The entire codebase</div><div class="pain">Newcomers, and you after a break, learn how the parts fit by reading the code.</div>
+      <div class="fix" data-in="3.7" style="color:var(--green)">→ Self-updating visual documentation</div><div class="ok">✓</div></div>
+   </div>
+  </section>
+
+  <!-- 4 · turn -->
+  <section class="scene cmp" id="s4" data-s="21.2" data-e="38.2" data-zin="0" data-zout="0">
+    <div class="hdr"><div class="eyebrow" data-in=".2">01 · Each turn</div>
+      <div class="h2" data-in=".35">“What did it deliver, and what does it need from me?”</div></div>
+    <div class="tag L" data-in=".5" style="color:var(--mute)"><b style="background:var(--dim)"></b>Today · the end of a turn</div>
+    <div class="tag R" data-in="2.4" style="color:var(--green)"><b style="background:var(--green)"></b>With InTheLoop</div>
+    <div class="win cmpwin L" id="s4left" data-in=".5" data-fx="left">
+      <div class="bar"><i></i><i></i><i></i><span>terminal — claude</span></div>
+      <div class="body"><div class="term reply" id="s4term"></div><div class="fadeb" style="height:60px"></div></div>
+    </div>
+    <div class="win cmpwin R" data-in="2.4" data-fx="right">
+      <div class="bar"><i></i><i></i><i></i><span>Session page · turn 7</span><span class="chip secchip" id="s4sec" style="margin-left:auto"></span></div>
+      <div class="body real">
+        <div class="col" id="s4c0"><img src="real/turn_wait.png"><div style="height:12px"></div><img src="real/turn_head.png"><img src="real/turn_cards.png"><img src="real/turn_foot.png"></div>
+        <div class="col" id="s4c1"><img src="real/turn_beats_give.png"></div>
+        <div class="col" id="s4c2"><img src="real/turn_beats_work.png"></div>
+        <div class="tap" id="s4tap"></div>
+        <div class="fadeb" style="height:40px;background:linear-gradient(transparent,#161614)"></div>
+      </div>
+    </div>
+    <div class="cap l L" data-in="1.4">More arrives than you can take in.</div>
+    <div class="cap r R" data-in="4.6">What was delivered first, then how it was worked out</div>
+  </section>
+
+  <!-- 5 · each code change -->
+  <section class="scene cmp" id="s5" data-s="39.4" data-e="52.4" data-zin="1">
+    <div class="hdr"><div class="eyebrow" data-in=".2">02 · After each code change</div>
+      <div class="h2" data-in=".35">“What is this change for, and how does each part serve it?”</div></div>
+    <div class="tag L" data-in=".5" style="color:var(--mute)"><b style="background:var(--dim)"></b>Today · the diff</div>
+    <div class="tag R" data-in="2.4" style="color:var(--green)"><b style="background:var(--green)"></b>With InTheLoop</div>
+    <div class="win cmpwin L" id="s5l1" data-in=".5" data-fx="left">
+      <div class="bar"><i></i><i></i><i></i><span>Pull request #3 · 15 files · <b style="color:var(--green)">+914</b> <b style="color:var(--red)">−56</b></span></div>
+      <div class="body" style="display:flex">
+        <div style="width:250px;border-right:1px solid var(--line);padding:8px 0" id="s5files"></div>
+        <div style="flex:1;min-width:0;position:relative;overflow:hidden"><div class="diff" id="s5diff"></div><div class="fadeb"></div></div>
+      </div>
+    </div>
+    <div class="win cmpwin R" data-in="2.4" data-fx="right">
+      <div class="bar"><i></i><i></i><i></i><span>Pull request #3 · explained</span><span class="chip secchip" id="s5sec" style="margin-left:auto"></span></div>
+      <div class="body real"><div class="col" id="s5col">
+        <img src="real/pr_obj.png"><img src="real/pr_bg.png"><img src="real/pr_flow.png"><img src="real/pr_tree.png">
+      </div><div class="fadeb" style="height:40px;background:linear-gradient(transparent,#161614)"></div></div>
+    </div>
+    <div class="cap l L" data-in="1.4">Hundreds of lines in one diff, read top to bottom</div>
+    <div class="cap r R" data-in="4.2">Background and flowcharts first, then small explained groups</div>
+  </section>
+
+  <!-- 6 · one diff becomes several -->
+  <section class="scene" id="s6" data-s="52" data-e="66.5" data-zout="1">
+    <div class="hdr" style="top:56px"><div class="eyebrow" data-in=".2">02 · After each code change</div>
+      <div style="position:relative;height:66px;margin-top:16px">
+        <div class="h2 c" id="s6h1" style="top:0">One 970-line diff becomes five smaller diffs</div>
+        <div class="h2 c" id="s6h2" style="top:0;opacity:0">Each small diff explains itself: what it does, background, steps</div></div></div>
+    <div class="splitlab" id="s6src" style="left:120px;top:226px">Pull request #3 · <b>50 hunks</b> in 15 files, in file order</div>
+    <div id="split"></div>
+    <div class="zshot" id="s6z1"><img src="real/grp_g1.png"></div>
+    <div class="zshot" id="s6z3"><img src="real/grp_g3.png"></div>
+    <div class="c" style="top:1016px"><div class="sub" id="s6cap" style="font-size:24px">Every hunk lands in exactly one group</div></div>
+  </section>
+
+  <!-- 7 · repo -->
+  <section class="scene cmp" id="s7" data-s="67.7" data-e="85.2" data-zin="2" data-zout="2">
+    <div class="hdr"><div class="eyebrow" data-in=".2">03 · The entire codebase · Self-updating visual documentation</div>
+      <div class="h2" data-in=".35">“How do the parts of this code fit together?”</div></div>
+    <div class="tag L" data-in=".5" style="color:var(--mute)"><b style="background:var(--dim)"></b>Today · finding your way in</div>
+    <div class="tag R" data-in="2.4" style="color:var(--green)"><b style="background:var(--green)"></b>With InTheLoop</div>
+    <div class="win cmpwin L" id="s7left" data-in=".5" data-fx="left">
+      <div class="bar"><i></i><i></i><i></i><span>InTheLoop</span></div>
+      <div class="body" style="display:flex">
+        <div style="width:290px;border-right:1px solid var(--line);position:relative;overflow:hidden"><div class="tree" id="s7tree"></div></div>
+        <div style="flex:1;min-width:0;position:relative;overflow:hidden">
+          <div class="tabs" id="s7tabs"></div>
+          <div style="position:absolute;top:41px;left:0;right:0;bottom:0;overflow:hidden"><div class="code" id="s7code"></div></div>
+        </div>
+      </div>
+      <div class="bubble" style="left:300px;top:470px;max-width:380px" data-in="1.8">Where does a turn get summarized?<div class="mono" style="font-size:15px;color:var(--amber);margin-top:6px">“summar” · <span id="grepn"></span></div></div>
+    </div>
+    <div class="win cmpwin R" data-in="2.4" data-fx="right">
+      <div class="bar"><i></i><i></i><i></i><span>InTheLoop · visual documentation</span><span class="chip secchip" id="s7sec" style="margin-left:auto"></span></div>
+      <div class="body real">
+        <div class="vtabs"><div>How it works</div><div>How the code works</div><div>How it was built</div></div>
+        <div class="vstage" id="s7stage">
+          <img src="real/vd_p_why.png"><img src="real/vd_p_flow.png"><img src="real/vd_layout.png"><img src="real/vd_concepts.png"><img src="real/vd_lanes.png"><img src="real/vd_mods.png"><img src="real/vd_b_major.png"><img src="real/vd_b_every.png">
+        </div></div>
+    </div>
+    <div class="cap l L" data-in="1.4">Learned by reading the code, file by file</div>
+    <div class="cap r R" data-in="6.6">Mental models from visual maps, self-updating</div>
+  </section>
+
+  <!-- 8 · gap closed -->
+  <section class="scene" id="s8" data-s="86.4" data-e="94">
+    <div class="c" style="top:78px"><div class="eyebrow" data-in=".2">With InTheLoop</div>
+      <div class="h2" style="margin-top:20px" data-in=".4">Understanding keeps pace with the code.</div></div>
+    <svg id="chart2" style="position:absolute;left:310px;top:220px" width="1300" height="600" viewBox="0 0 1300 600"></svg>
+    <div class="c" style="top:860px"><div class="sub" style="font-size:28px" data-in="4.6">Pages update after every turn, change and push, so the gap never opens.</div></div>
+  </section>
+
+  <!-- 9 · close -->
+  <section class="scene" id="s9" data-s="93.6" data-e="103.8" data-last="1">
+    <div class="c" style="top:250px">
+      <div data-in=".2" data-fx="scale" style="display:inline-block"><svg width="120" height="120" viewBox="0 0 120 120" id="logo"></svg></div>
+      <div class="h1" style="font-size:110px;margin-top:20px" data-in=".5"><span style="font-weight:500">InThe</span>Loop</div>
+      <div class="sub" style="font-size:42px;color:var(--ink);margin-top:24px;font-weight:500" data-in="1.0">Understand <span class="hl add" id="hlAdd">every line</span> your AI agent writes without <span class="hl del" id="hlDel">burning out</span>.</div>
+      <div style="display:flex;justify-content:center;gap:14px;margin-top:46px">
+        <span class="chip" style="font-size:18px;padding:9px 16px;color:var(--blue);border-color:rgba(110,168,255,.45)" data-in="1.7">Each turn</span>
+        <span class="chip" style="font-size:18px;padding:9px 16px;color:var(--amber);border-color:rgba(242,182,92,.45)" data-in="1.85">Each code change</span>
+        <span class="chip" style="font-size:18px;padding:9px 16px;color:var(--green);border-color:rgba(95,211,154,.45)" data-in="2.0">The entire codebase</span>
+      </div>
+      <div class="mono" style="margin-top:56px;font-size:24px;color:var(--mute)" data-in="2.8"><span style="color:var(--dim)">$</span> ./install.sh <span style="color:var(--ink)">&lt;repo&gt;</span> <span style="color:var(--dim)">&nbsp;·&nbsp; built for Claude Code</span></div>
+    </div>
+  </section>
+</div>
+
+<script src="real/data.js"></script>
+<script>
+const $=s=>document.querySelector(s);
+const clamp=x=>Math.max(0,Math.min(1,x));
+const pr=(t,a,d)=>clamp((t-a)/d);
+const out=x=>1-Math.pow(1-x,3);
+const io=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+let seed=7; const rnd=()=>((seed=(seed*16807)%2147483647)/2147483647);
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+
+/* ---------- generated content ---------- */
+const files=REAL.hook.paths;
+const codeA=REAL.code.filter(l=>l.trim()&&l.length<90);
+const thoughts=['Thinking… these dicts are saved as JSON, so every key has to stay exactly as it is','Pages read these files too; the record must keep keys it does not declare','A field the file lacked should stay out of the JSON until the code sets it','from and in are Python keywords, so those keys need a different field name'];
+function termLines(n){
+  const L=[]; seed=11;
+  while(L.length<n){
+    const r=rnd(), f=pick(files);
+    if(r<.22){L.push(`<span class="dot">⏺</span> <span class="k">Read</span>(${f})`);L.push(`<span class="g">  ⎿  Read ${80+Math.floor(rnd()*300)} lines</span>`)}
+    else if(r<.34){L.push(`<span class="dot">⏺</span> <span class="k">Search</span>(pattern: "${pick(['json.load','to_dict','write_json','.get(','dataclass'])}")`);L.push(`<span class="g">  ⎿  Found ${2+Math.floor(rnd()*30)} files</span>`)}
+    else if(r<.46){L.push(`<span class="th">✻ ${pick(thoughts)}</span>`)}
+    else if(r<.80){L.push(`<span class="dot">⏺</span> <span class="k">Update</span>(${f})`);const a=3+Math.floor(rnd()*40);L.push(`<span class="g">  ⎿  Updated ${f} with ${a} additions and ${Math.floor(a/5)} removals</span>`);
+      const k=Math.floor(rnd()*codeA.length);for(let j=0;j<4+Math.floor(rnd()*5);j++){const ln=40+k+j;const add=rnd()<.7;L.push(`<span class="${add?'a':'r'}">     ${String(ln).padStart(3)} ${add?'+':'-'} ${esc(codeA[(k+j)%codeA.length])}</span>`)}}
+    else {L.push(`<span class="dot">⏺</span> <span class="k">Bash</span>(${pick(['python3 -m pytest -q','python3 turn-maps/turn_maps.py --render .','git diff --stat','python3 -m compileall -q docagent'])})`);L.push(`<span class="g">  ⎿  ${pick(['all checks passed','rendered 14 session pages','49 files changed, 2379 insertions(+), 1017 deletions(-)','ok'])}</span>`)}
+  }
+  return L;
+}
+function diffLines(n){
+  const L=[]; seed=29; let fi=0;
+  while(L.length<n){
+    L.push(`<div class="fh">${files[fi++%files.length]}</div>`);
+    for(let h=0;h<2;h++){const at=10+Math.floor(rnd()*200);L.push(`<div class="hh">@@ -${at},${7} +${at},${12} @@</div>`);
+      const k=Math.floor(rnd()*codeA.length);for(let j=0;j<8+Math.floor(rnd()*8);j++){const r=rnd();const c=esc(codeA[(k+j)%codeA.length]);L.push(r<.55?`<div class="ad">+${c}</div>`:r<.72?`<div class="rm">-${c}</div>`:`<div> ${c}</div>`)}}
+  }
+  return L.join('');
+}
+const tl=termLines(260);
+$('#s1term').innerHTML='<span class="p">&gt; </span><span class="t" id="s1prompt"></span>\n\n<div id="s1out">'+tl.join('\n')+'</div>';
+$('#s5diff').innerHTML=(()=>{const o=[];let last='';for(const h of REAL.pr.hunks){if(o.length>420)break;if(h.path!==last){o.push(`<div class="fh">${esc(h.path)}</div>`);last=h.path}
+  o.push(`<div class="hh">@@ -${h.ostart} +${h.start} @@</div>`);for(const [sg,tx] of h.lines.slice(0,40))o.push(`<div class="${sg=='+'?'ad':sg=='-'?'rm':''}">${sg==' '?' ':sg}${esc(tx)}</div>`)}return o.join('')})();
+{const cnt=Object.fromEntries(REAL.pr.files.map(([f,a,r])=>[f,[a,r]]));const order=[...document.querySelectorAll('#s5diff .fh')].map(e=>e.textContent);
+$('#s5files').innerHTML=order.map((f,i)=>`<div class="sf${i==0?' on':''}" data-path="${esc(f)}"><span>${esc(f.split('/').pop())}</span><span><span class="a">+${cnt[f][0]}</span> <span class="r">−${cnt[f][1]}</span></span></div>`).join('');}
+// repo tree + tabs + code
+const tree=(()=>{const out=[],seen=new Set();for(const f of REAL.tree){const parts=f.split('/');for(let d=0;d<parts.length-1;d++){const k=parts.slice(0,d+1).join('/');if(!seen.has(k)){seen.add(k);out.push([d,'▾ '+parts[d],k])}}out.push([parts.length-1,parts.at(-1),f])}return out.slice(0,40)})();
+$('#s7tree').innerHTML=tree.map(([d,n,k])=>`<div style="--d:${d}" class="${/turn_maps\/(app|rows|prompt)/.test(k)?'hl':''}">${n}</div>`).join('');
+$('#s7tabs').innerHTML=['app.py','rows.py','prompt.py','schema.py','claude.py','snapshots.py','render.py'].map((n,i)=>`<div data-tab="${i}">${n}</div>`).join('');
+$('#grepn').textContent=`${REAL.grep.hits} results in ${REAL.grep.files} files`;
+$('#s7code').innerHTML=REAL.code.map(l=>esc(l).replace(/("[^"]*")/g,'<span class="st">$1</span>').replace(/\b(def|class|return|if|for|in|continue|or|and|import|from|self|try|except|with)\b(?![^<]*>)/g,'<span class="kw">$1</span>')).join('\n');
+
+const REPLY=(()=>{const g=s=>`<span class="g">${s}</span>`,P=s=>`<span class="pr">${esc(s)}</span>`,H=s=>`<span class="hd">${esc(s)}</span>`;
+ const wrap=(t,w)=>{const o=[];let l='';for(const x of t.split(' ')){if((l+' '+x).trim().length>w){o.push(l);l=x}else l=(l?l+' ':'')+x}if(l)o.push(l);return o};
+ const pre=['<span class="dot">⏺</span> <span class="k">Bash</span>(for i in $(seq 30); do git add -A …; done)',g('  ⎿  29 of 30 runs failed: unable to stat … .tmp'),
+  '<span class="dot">⏺</span> <span class="k">Update</span>(docagent/change_maps/snapshots.py)',g('  ⎿  Updated docagent/change_maps/snapshots.py'),
+  '<span class="dot">⏺</span> <span class="k">Update</span>(CLAUDE.md)',g('  ⎿  Updated CLAUDE.md'),''];
+ const body=[];let first=true;
+ for(const para of REAL.turn.reply.replace(/`/g,'').split('\n')){
+   if(!para.trim()){body.push('');continue}
+   const m=para.match(/^\*\*(.+?)\*\*\s*(.*)$/);
+   if(m){body.push('  '+H(m[1]));if(m[2])wrap(m[2],70).forEach(l=>body.push('  '+P(l)));continue}
+   const bul=para.startsWith('- ');const txt=(bul?para.slice(2):para).replace(/\*\*/g,'');
+   wrap(txt,bul?68:70).forEach((l,i)=>body.push(first&&i==0?'<span class="dot">⏺</span> '+P(l):'  '+P((bul?(i?'  ':'• '):'')+l)));first=false;
+ }
+ body.push('','<span class="p">&gt; </span><span style="background:#cfd3dc">&nbsp;</span>');
+ return pre.join('\n')+'\n<div id="s4out">'+body.join('\n')+'</div>'})();
+$('#s4term').innerHTML=REPLY;
+/* ---------- charts ---------- */
+const X0=90,X1=1230,Y0=530;
+const xs=u=>X0+(X1-X0)*u;
+const fCode=u=>Y0-450*Math.pow(u,1.25);
+const fKnow=u=>Y0-450*(Math.pow(u,1.25)-.7*Math.pow(u,1.75));
+const fWith=u=>Y0-450*.93*Math.pow(u,1.25);
+const path=(f,a=0,b=1)=>{let d='';for(let i=0;i<=80;i++){const u=a+(b-a)*i/80;d+=(i?'L':'M')+xs(u).toFixed(1)+' '+f(u).toFixed(1)}return d};
+const area=(f,g)=>{let d=path(f);for(let i=80;i>=0;i--){const u=i/80;d+='L'+xs(u).toFixed(1)+' '+g(u).toFixed(1)}return d+'Z'};
+function axes(){return `<line x1="${X0}" y1="${Y0}" x2="${X1}" y2="${Y0}" stroke="#2d3344" stroke-width="2"/>
+  ${Array.from({length:10},(_,i)=>`<text x="${xs(i/9)}" y="${Y0+34}" fill="#5b6274" font-family="SF Mono,Menlo" font-size="15" text-anchor="middle">${i+1}</text>`).join('')}
+  <text x="${X1}" y="${Y0+64}" fill="#5b6274" font-family="SF Mono,Menlo" font-size="15" text-anchor="end" letter-spacing="2">SESSIONS →</text>`}
+$('#chart1').innerHTML=`<defs><clipPath id="c1"><rect id="c1r" x="0" y="0" width="0" height="600"/></clipPath>
+  <linearGradient id="gapg" x1="0" x2="1"><stop offset="0" stop-color="#ff6f6f" stop-opacity=".02"/><stop offset="1" stop-color="#ff6f6f" stop-opacity=".28"/></linearGradient></defs>
+  ${axes()}<g clip-path="url(#c1)"><path d="${area(fCode,fKnow)}" fill="url(#gapg)"/>
+  <path d="${path(fCode)}" fill="none" stroke="#e8eaf0" stroke-width="4" stroke-linecap="round"/>
+  <path d="${path(fKnow)}" fill="none" stroke="#6ea8ff" stroke-width="4" stroke-linecap="round"/></g>
+  <g id="c1lab"><text x="${X1+0}" y="${fCode(1)-20}" fill="#e8eaf0" font-size="22" font-weight="600" text-anchor="end" font-family="-apple-system">Code that exists</text>
+  <text x="${X1}" y="${fKnow(1)+40}" fill="#6ea8ff" font-size="22" font-weight="600" text-anchor="end" font-family="-apple-system">What you understand</text></g>
+  <g id="c1gap"><line x1="${X1+24}" y1="${fCode(1)+6}" x2="${X1+24}" y2="${fKnow(1)-6}" stroke="#ff6f6f" stroke-width="2.5"/>
+  <line x1="${X1+16}" y1="${fCode(1)+6}" x2="${X1+32}" y2="${fCode(1)+6}" stroke="#ff6f6f" stroke-width="2.5"/><line x1="${X1+16}" y1="${fKnow(1)-6}" x2="${X1+32}" y2="${fKnow(1)-6}" stroke="#ff6f6f" stroke-width="2.5"/>
+  <text x="${xs(.74)}" y="${(fCode(.86)+fKnow(.86))/2+8}" fill="#ff8f8f" font-size="30" font-weight="700" text-anchor="middle" font-family="-apple-system">cognitive debt</text></g>`;
+$('#chart2').innerHTML=`<defs><clipPath id="c2"><rect id="c2r" x="0" y="0" width="0" height="600"/></clipPath></defs>
+  ${axes()}<path d="${path(fKnow)}" fill="none" stroke="#5b6274" stroke-width="3" stroke-dasharray="8 10"/>
+  <text x="${X1}" y="${fKnow(1)+40}" fill="#5b6274" font-size="20" text-anchor="end" font-family="-apple-system">without InTheLoop</text>
+  <path d="${path(fCode)}" fill="none" stroke="#e8eaf0" stroke-width="4" stroke-linecap="round"/>
+  <text x="${X1}" y="${fCode(1)-20}" fill="#e8eaf0" font-size="22" font-weight="600" text-anchor="end" font-family="-apple-system">Code that exists</text>
+  <g clip-path="url(#c2)"><path d="${area(fCode,fWith)}" fill="#5fd39a" opacity=".18"/>
+  <path d="${path(fWith)}" fill="none" stroke="#5fd39a" stroke-width="5" stroke-linecap="round" style="filter:drop-shadow(0 0 10px rgba(95,211,154,.6))"/></g>
+  <text id="c2lab" x="${xs(.62)}" y="${fWith(.62)+44}" fill="#5fd39a" font-size="24" font-weight="650" font-family="-apple-system">What you understand, with InTheLoop</text>`;
+
+// breakdown tree links (local coords of #tree)
+($('#tree')||{}).innerHTML=`<path class="ln" d="M190 57 C210 57 210 24 230 24" stroke="#8b92a5" stroke-width="1.6" fill="none" pathLength="1"/>
+  <path class="ln" d="M450 24 C500 24 500 52 550 52" stroke="#e8eaf0" stroke-width="4" fill="none" pathLength="1"/>
+  <path class="ln" d="M450 88 C500 88 500 70 550 70" stroke="#e8eaf0" stroke-width="4" fill="none" pathLength="1"/>`;
+($('#lanes')||{}).innerHTML=`<path class="ln" d="M212 22 C218 22 218 22 224 22" stroke="#8b92a5" stroke-width="1.6" fill="none" pathLength="1"/><path class="ln" d="M356 22 C362 22 362 74 368 74" stroke="#8b92a5" stroke-width="1.6" fill="none" pathLength="1"/><path class="ln" d="M500 74 C506 74 506 74 512 74" stroke="#8b92a5" stroke-width="1.6" fill="none" pathLength="1"/><path class="ln" d="M644 74 C650 74 650 74 656 74" stroke="#8b92a5" stroke-width="1.6" fill="none" pathLength="1"/>`;
+$('#logo').innerHTML=`<g transform="rotate(-90 60 60)" fill="none" stroke-width="14" stroke-linecap="round" stroke-dasharray="59 204.89">
+  <circle cx="60" cy="60" r="42" stroke="#6ea8ff"/><circle cx="60" cy="60" r="42" stroke="#f2b65c" stroke-dashoffset="-87.96"/><circle cx="60" cy="60" r="42" stroke="#5fd39a" stroke-dashoffset="-175.93"/></g>
+  <circle cx="60" cy="60" r="15" fill="#e8eaf0"/>`;
+
+/* ---------- timeline ---------- */
+const scenes=[...document.querySelectorAll('.scene')].map(el=>({el,id:el.id,s:+el.dataset.s,e:+el.dataset.e,last:!!el.dataset.last,items:[...el.querySelectorAll('[data-in]')]}));
+const hooks={
+  s1(t){
+    const prompt=REAL.hook.prompt.replace(/ and .*$/,'')+'.';
+    $('#s1prompt').textContent=prompt.slice(0,Math.floor(prompt.length*pr(t,.5,1.2)));
+    const shown=t<1.8?0:Math.pow(t-1.8,1.5)*420, sp=Math.max(0,shown-600);
+    $('#s1out').style.clipPath=`inset(0 0 ${Math.max(0,$('#s1out').offsetHeight-shown)}px 0)`;
+    $('#s1term').style.transform=`translateY(${-sp}px)`;
+    const k=io(pr(t,2.7,.9)); const w=$('#s1win');
+    w.style.filter=`blur(${k*7}px) brightness(${1-k*.6})`;
+  },
+  s2(t){ const k=io(pr(t,.7,3.8)); $('#c1r').setAttribute('width',X0+(X1-X0)*k+4);
+    $('#c1lab').style.opacity=out(pr(t,4.1,.6)); $('#c1gap').style.opacity=out(pr(t,4.7,.7)); },
+  s4(t){ const o=$('#s4out'),h=o.offsetHeight,shown=Math.min(h,Math.max(0,(t-.6)*190));
+    o.style.clipPath=`inset(0 0 ${h-shown}px 0)`; $('#s4term').style.transform=`translateY(${-Math.max(0,o.offsetTop+shown-580)}px)`; dimLeft('#s4left',t,5.0);
+    const c0=$('#s4c0'),c1=$('#s4c1'),c2=$('#s4c2');
+    c0.style.opacity=1-pr(t,4.3,.4); c1.style.opacity=Math.min(pr(t,4.3,.4),1-pr(t,13.0,.4)); c2.style.opacity=pr(t,13.0,.4);
+    pxScroll(c1,t,[[4.4,0],[6.0,536],[7.8,862],[9.4,1145],[11.0,1579],[12.0,0]]);
+    pxScroll(c2,t,[[13.0,0],[14.4,537],[15.8,890]]);
+    const tap=$('#s4tap'),cards=c0.children[3],sc0=cards.clientWidth/1068,sc1=c1.children[0].clientWidth/1030;
+    let tp=null; if(t>3.6&&t<4.5) tp=[16+897*sc0,12+cards.offsetTop+200*sc0,pr(t,3.6,.9)]; if(t>12.3&&t<13.2) tp=[16+515*sc1,12+200*sc1,pr(t,12.3,.9)];
+    if(tp){tap.style.left=tp[0]+'px';tap.style.top=tp[1]+'px';tap.style.opacity=Math.sin(tp[2]*Math.PI);tap.style.transform=`scale(${1.4-.5*tp[2]})`}else tap.style.opacity=0;
+    secName('#s4sec',t,[[2.4,'Turn 7 · the glance'],[4.4,'Delivered'],[7.8,'What changed'],[9.4,'Where it fits'],[11.0,'Before you rely on it'],[12.2,'Worked it out'],[14.4,'Decisions made'],[15.8,'Steps']]) },
+  s5(t){ const y=t*110; $('#s5diff').style.transform=`translateY(${-y}px)`; dimLeft('#s5l1',t,5.0);
+    shotScroll('#s5col','#s5sec',t,[[2.4,0,'Objective'],[4.8,1,'Background'],[7.2,2,'How it runs'],[10.0,3,'Group by group']]);
+    let cur=null; document.querySelectorAll('#s5diff .fh').forEach(e=>{if(e.offsetTop<=y+60)cur=e.textContent});
+    document.querySelectorAll('#s5files .sf').forEach(d=>d.classList.toggle('on',d.dataset.path===cur)) },
+  s6(t){ splitAnim(t) },
+  s7(t){ dimLeft('#s7left',t,7.6); const ti=Math.min(6,Math.floor(t*1.1));
+    document.querySelectorAll('#s7tabs div').forEach((d,i)=>d.classList.toggle('on',i===ti));
+    $('#s7code').style.transform=`translateY(${-((ti*173)%420)}px)`;
+    const seg=[[2.4,0,'Why it exists'],[4.4,0,'How it works, stage by stage'],[6.6,1,'How the code is organized'],[8.6,1,'Before you read the code'],[10.6,1,'One turn, end to end'],[12.6,1,'Where the code lives'],[14.2,2,'Major changes'],[15.8,2,'Every change, turn by turn']];
+    const imgs=[...$('#s7stage').children],H=$('#s7stage').clientHeight;let cur=0;
+    seg.forEach(([at],i)=>{if(t>=at)cur=i});
+    imgs.forEach((im,i)=>{const at=seg[i][0],nx=(seg[i+1]||[99])[0];const inK=pr(t,at,.45),outK=i<seg.length-1?pr(t,nx,.45):0;
+      im.style.opacity=Math.min(inK,1-outK);const drift=Math.max(0,im.clientHeight-H)*io(pr(t,at+.5,Math.max(.1,nx-at-.9)));
+      im.style.transform=`translateY(${(1-out(inK))*16-drift}px)`});
+    const hues=['var(--blue)','var(--amber)','var(--green)'];
+    document.querySelectorAll('.vtabs div').forEach((d,i)=>{d.classList.toggle('on',i===seg[cur][1]);d.style.setProperty('--h',hues[i])});
+    $('#s7sec').textContent=seg[cur][2] },
+  s3(t){ ovHub(t+14.6) },
+  s9(t){ $('#hlAdd').style.backgroundSize=`${io(pr(t,1.6,.7))*100}% 100%`; $('#hlDel').style.backgroundSize=`${io(pr(t,2.2,.7))*100}% 100%` },
+  s8(t){ $('#c2r').setAttribute('width',X0+(X1-X0)*io(pr(t,.8,3.4))+6); $('#c2lab').style.opacity=out(pr(t,3.6,.6)) },
+};
+function shotScroll(col,lab,t,stops){const c=$(col),imgs=[...c.children],H=c.parentElement.clientHeight,max=Math.max(0,c.scrollHeight-H);
+  const top=i=>Math.min(max,imgs.slice(0,i).reduce((a,im)=>a+im.offsetHeight,0));let y=0,name=stops[0][2];
+  for(let i=0;i<stops.length;i++){const [at,idx,nm]=stops[i];if(t>=at){name=nm;const prev=i?top(stops[i-1][1]):0;y=prev+(top(idx)-prev)*io(pr(t,at,.9))}}
+  c.style.transform=`translateY(${-y}px)`;$(lab).textContent=name}
+function pxScroll(c,t,stops){const im=c.children[0],k=im.clientWidth/(im.naturalWidth/2||1),max=Math.max(0,c.scrollHeight-c.parentElement.clientHeight+24);let y=0,prev=0;
+  for(const [at,px] of stops){if(t>=at){y=prev+(Math.min(max,px*k)-prev)*io(pr(t,at,.9));prev=Math.min(max,px*k)}}c.style.transform=`translateY(${-y}px)`}
+function secName(sel,t,list){let n='';for(const [at,nm] of list)if(t>=at)n=nm;$(sel).textContent=n}
+const CARD=[90,680,1270].map(l=>({x:l,y:400,w:560,h:400}));
+const CH=[[21.2,38.2,0],[39.4,66.5,1],[67.7,85.2,2]];
+function rectT(i,k){const c=CARD[i],s0=c.w/1920,tx=c.x+(c.w-1920*s0)/2,ty=c.y+(c.h-1080*s0)/2,sc=s0+(1-s0)*k;return `translate(${tx*(1-k)}px,${ty*(1-k)}px) scale(${sc})`}
+function ovHub(T){let k=0,ci=-1;for(const [a,b,i] of CH){if(T>=a&&T<=b){k=Math.min(io(pr(T,a,1)),1-io(pr(T,b-1,1)));ci=i}}
+  const ov=$('#ovwrap');if(ci>=0){const c=CARD[ci];ov.style.transformOrigin=`${c.x+c.w/2}px ${c.y+c.h/2}px`;ov.style.transform=`scale(${1+(1920/c.w-1)*k})`;ov.style.opacity=1-k}else{ov.style.transform='';ov.style.opacity=1}
+  CH.forEach(([a,b,i])=>{const el=$('#pl'+i);el.classList.toggle('done',T>b-.3);el.classList.toggle('next',T>a-1.5&&T<a+.2)})}
+let SPLIT=null,ST=0;const GX=gi=>660+(417-660)*io(pr(ST,5.7,.8))+gi*220;
+function buildSplit(){const box=$('#split'),H=REAL.split.hunks,G=REAL.split.groups,gOf={};G.forEach((g,gi)=>g.hunks.forEach((h,k)=>gOf[h]=[gi,k]));
+  const els=H.map((h,i)=>{const d=document.createElement('div');d.className='hk';const tot=h.a+h.r||1,ga=Math.round(h.a/tot*100);
+    d.style.borderLeftColor=h.a>=h.r?'var(--green)':'var(--red)';d.innerHTML=`${esc(h.path.split('/').pop())} <span style="color:var(--green)">+${h.a}</span>${h.r?` <span style="color:var(--red)">−${h.r}</span>`:''}`;box.appendChild(d);return {d,i,g:gOf[h.id]}});
+  const heads=G.map((g,gi)=>{const d=document.createElement('div');d.className='gh';d.style.left=GX(gi)+'px';d.style.top='262px';
+    d.innerHTML=`<div class="n">${gi+1} · ${g.hunks.length} hunk${g.hunks.length>1?'s':''}</div><div class="t">${esc(g.title)}</div><div class="z"><span style="color:var(--green)">+${g.a}</span> <span style="color:var(--red)">−${g.r}</span></div>`;box.appendChild(d);return d});
+  SPLIT={els,heads}}
+function splitAnim(t){ST=t;if(!SPLIT)buildSplit();const {els,heads}=SPLIT;
+  const dim=1-.85*io(pr(t,6.4,.6));
+  els.forEach(({d,i,g})=>{const [gi,k]=g,ap=out(pr(t,.4+i*.012,.4));const st=2.4+gi*.55+k*.025,m=io(pr(t,st,.9));
+    const x0=120,y0=262+i*14,w0=430,x1=GX(gi),y1=392+k*14,w1=206;
+    d.style.left=(x0+(x1-x0)*m)+'px';d.style.top=(y0+(y1-y0)*m)+'px';d.style.width=(w0+(w1-w0)*m)+'px';d.style.opacity=ap*dim});
+  heads.forEach((h,gi)=>{h.style.left=GX(gi)+'px';h.style.opacity=out(pr(t,1.6+gi*.15,.5))*dim;h.style.transform=`translateY(${(1-out(pr(t,1.6+gi*.15,.5)))*14}px)`});
+  $('#s6src').style.opacity=out(pr(t,.4,.5))*(1-pr(t,2.6,1.2))*dim;
+  $('#s6cap').style.opacity=out(pr(t,5.0,.6))*(1-pr(t,6.2,.4));
+  $('#s6h1').style.opacity=1-pr(t,6.4,.5);$('#s6h2').style.opacity=pr(t,6.6,.5);
+  const zoom=(el,gi,a,b)=>{const k=io(pr(t,a,.9)),q=io(pr(t,b,.7)),W=900,X=(1920-W)/2,Y=196;
+    const x=GX(gi)+(X-GX(gi))*k,y=262+(Y-262)*k,w=206+(W-206)*k;el.style.left=(x-q*260)+'px';el.style.top=y+'px';el.style.width=w+'px';el.style.opacity=Math.min(pr(t,a,.3),1-q)};
+  zoom($('#s6z1'),0,6.6,10.2); zoom($('#s6z3'),2,10.2,99)}
+function dimLeft(sel,t,at){ const k=io(pr(t,at,.8)); const w=$(sel); w.style.filter=`saturate(${1-k*.6}) brightness(${1-k*.35})` }
+
+function seek(T){
+  // background glows drift
+  $('#g1').style.transform=`translate(${-300+Math.sin(T*.13)*160}px,${-650+Math.cos(T*.1)*90}px)`;
+  $('#g1').style.background=`radial-gradient(circle,rgba(${T>86?'60,160,120':'80,110,220'},.22),transparent 60%)`;
+  $('#g2').style.transform=`translate(${900+Math.cos(T*.11)*180}px,${200+Math.sin(T*.09)*120}px)`;
+  $('#g2').style.background='radial-gradient(circle,rgba(150,100,230,.16),transparent 60%)';
+  for(const sc of scenes){
+    if(T<sc.s||T>sc.e){sc.el.style.display='none';continue}
+    sc.el.style.display='block';
+    const t=T-sc.s,len=sc.e-sc.s;
+    const fi=out(pr(t,0,.6)),fo=sc.last?0:io(pr(t,len-.6,.6));
+    let op=Math.min(fi,1-fo),tr=`scale(${1+.03*fo})`,bl=fo>0?fo*6:0;const zi=sc.el.dataset.zin,zo=sc.el.dataset.zout;
+    if(zi!==undefined&&t<1){op=pr(t,.15,.5);tr=rectT(+zi,io(pr(t,0,1)));bl=0}
+    if(zo!==undefined){op=zi!==undefined?(t<1?op:1):fi;bl=0;tr=t<1&&zi!==undefined?tr:'none';if(t>len-1){tr=rectT(+zo,1-io(pr(t,len-1,1)));op=1-pr(t,len-.6,.5)}}
+    if(zi!==undefined||zo!==undefined)sc.el.style.transformOrigin='0 0';
+    sc.el.style.opacity=op;sc.el.style.transform=tr;sc.el.style.filter=bl?`blur(${bl}px)`:'';
+    for(const it of sc.items){
+      const a=+it.dataset.in,d=+(it.dataset.d||.7),fx=it.dataset.fx||'up',k=out(pr(t,a,d));
+      if(it.dataset.count){it.textContent=Math.round(+it.dataset.count*k).toLocaleString();continue}
+      it.style.opacity=k;
+      it.style.transform=fx==='up'?`translateY(${(1-k)*26}px)`:fx==='left'?`translateX(${-(1-k)*60}px)`:fx==='right'?`translateX(${(1-k)*60}px)`:fx==='scale'?`scale(${.94+.06*k})`:'';
+    }
+    hooks[sc.id]&&hooks[sc.id](t,len);
+  }
+}
+window.seek=seek; window.DURATION=103.8;
+// live preview when opened directly
+if(!location.search.includes('render')){
+  // the stage scales to the window above a control bar (play/pause and a seek bar) that is always on show
+  document.body.style.cssText='width:100vw;height:100vh;overflow:hidden;background:#000';
+  const BAR=68, st=$('#stage');st.style.transformOrigin='0 0';st.style.position='absolute';
+  const ui=document.createElement('div');ui.id='ctl';ui.innerHTML=`<button id="pp" aria-label="Play or pause">❚❚</button><span id="tc">0:00</span><input id="sk" type="range" min="0" max="${DURATION}" step="0.01" value="0" aria-label="Seek"><span id="td"></span>`;
+  document.body.appendChild(ui);
+  const css=document.createElement('style');css.textContent=`#ctl{position:fixed;left:0;right:0;bottom:0;height:${BAR}px;display:flex;align-items:center;gap:16px;padding:0 24px;background:#0d1017;border-top:1px solid #2b3142;font:600 15px/1 "SF Mono",Menlo,monospace;color:#e8eaf0;z-index:9;font-variant-numeric:tabular-nums}
+  #ctl button{all:unset;flex:none;cursor:pointer;width:46px;height:46px;border-radius:50%;background:#6ea8ff;color:#0b0d12;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 0 5px rgba(110,168,255,.22);transition:background .15s,box-shadow .15s}
+  #ctl button:hover{background:#9cc3ff;box-shadow:0 0 0 7px rgba(110,168,255,.3)}
+  #ctl input{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:10px;margin:0;border-radius:999px;cursor:pointer;background:linear-gradient(to right,#6ea8ff var(--p,0%),#2b3142 var(--p,0%))}
+  #ctl input::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:#fff;border:4px solid #6ea8ff;box-shadow:0 1px 6px rgba(0,0,0,.6)}
+  #ctl input::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:#fff;border:4px solid #6ea8ff;box-shadow:0 1px 6px rgba(0,0,0,.6)}
+  #ctl input::-moz-range-track{background:transparent}
+  #td{color:#8b92a5}
+  #ctl button:focus-visible,#ctl input:focus-visible{outline:2px solid #fff;outline-offset:3px}`;document.head.appendChild(css);
+  const fit=()=>{const k=Math.min(innerWidth/1920,(innerHeight-BAR)/1080);st.style.transform=`scale(${k})`;st.style.left=((innerWidth-1920*k)/2)+'px';st.style.top=((innerHeight-BAR-1080*k)/2)+'px'};
+  fit();addEventListener('resize',fit);
+  const fmt=x=>`${Math.floor(x/60)}:${String(Math.floor(x%60)).padStart(2,'0')}`;$('#td').textContent=fmt(DURATION);
+  const q=new URLSearchParams(location.search);let T=Math.min(DURATION,+q.get('t')||0),playing=true,last=performance.now(),drag=false;
+  const setPlay=p=>{playing=p;$('#pp').textContent=p?'❚❚':'▶'};
+  $('#pp').onclick=()=>{if(!playing&&T>=DURATION)T=0;setPlay(!playing)};
+  $('#sk').addEventListener('input',e=>{drag=true;T=+e.target.value;seek(T)});
+  $('#sk').addEventListener('change',()=>{drag=false});
+  addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'&&e.key!==' ')return;if(e.key===' '&&e.target.id==='pp')return;
+    if(e.key===' '){e.preventDefault();$('#pp').click()} else if(e.key==='ArrowRight')T=Math.min(DURATION,T+5); else if(e.key==='ArrowLeft')T=Math.max(0,T-5)});
+  (function loop(now){const dt=(now-last)/1000;last=now;if(playing&&!drag){T+=dt;if(T>=DURATION){T=DURATION;setPlay(false)}}
+    seek(Math.min(T,DURATION-0.001));if(!drag)$('#sk').value=T;$('#sk').style.setProperty('--p',(T/DURATION*100)+'%');$('#tc').textContent=fmt(T);requestAnimationFrame(loop)})(performance.now());
+}else seek(0);
+</script>
+</body>
+</html>
