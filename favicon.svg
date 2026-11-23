@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+<style>
+circle{fill:none;stroke-width:3.2;stroke-linecap:round;stroke-dasharray:11.8 41.61}
+.l1{stroke:#2f6fdb}.l2{stroke:#b7791f}.l3{stroke:#1f8a5b}.you{fill:#1c1b19;stroke:none}
+@media (prefers-color-scheme:dark){.l1{stroke:#6e9ef0}.l2{stroke:#e0a54a}.l3{stroke:#4cc38a}.you{fill:#edeae4}}
+</style>
+<g transform="rotate(-90 12 12)">
+<circle class="l1" cx="12" cy="12" r="8.5"/>
+<circle class="l2" cx="12" cy="12" r="8.5" stroke-dashoffset="-17.8"/>
+<circle class="l3" cx="12" cy="12" r="8.5" stroke-dashoffset="-35.6"/>
+</g>
+<circle class="you" cx="12" cy="12" r="3"/>
+</svg>
