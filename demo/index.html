@@ -34,6 +34,8 @@ svg text{font-family:var(--sans)}
 .bar i{width:11px;height:11px;border-radius:50%;background:#2a2f3d;display:inline-block}
 .bar span{margin-left:12px}
 .body{position:absolute;top:44px;left:0;right:0;bottom:0;overflow:hidden}
+/* no title bars on the windows; the bars stay in the markup, hidden, because the script still writes their section chips */
+.bar{display:none} .body{top:0}
 
 /* terminal */
 .term{font:17px/1.62 var(--mono);color:#b9bfcc;padding:18px 24px;white-space:pre}
@@ -340,7 +342,8 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
       <div data-in=".2" data-fx="scale" style="display:inline-block"><svg width="120" height="120" viewBox="0 0 120 120" id="logo"></svg></div>
       <div class="h1" style="font-size:110px;margin-top:20px" data-in=".5"><span style="font-weight:500">InThe</span>Loop</div>
       <div class="sub" style="font-size:42px;color:var(--ink);margin-top:24px;font-weight:500" data-in="1.0">Understand <span class="hl add" id="hlAdd">every line</span> your AI agent writes without <span class="hl del" id="hlDel">burning out</span>.</div>
-      <div style="display:flex;justify-content:center;gap:14px;margin-top:46px">
+      <div class="sub" style="font-size:24px;margin-top:40px" data-in="1.5">Eliminate cognitive debt build-up at:</div>
+      <div style="display:flex;justify-content:center;gap:14px;margin-top:18px">
         <span class="chip" style="font-size:18px;padding:9px 16px;color:var(--blue);border-color:rgba(110,168,255,.45)" data-in="1.7">Each turn</span>
         <span class="chip" style="font-size:18px;padding:9px 16px;color:var(--amber);border-color:rgba(242,182,92,.45)" data-in="1.85">Each code change</span>
         <span class="chip" style="font-size:18px;padding:9px 16px;color:var(--green);border-color:rgba(95,211,154,.45)" data-in="2.0">The entire codebase</span>
@@ -362,7 +365,7 @@ const pick=a=>a[Math.floor(rnd()*a.length)];
 const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
 /* ---------- generated content ---------- */
-const files=REAL.hook.paths;
+const files=REAL.hook.paths.filter(p=>!/doc-agent/.test(p)); // the old project name stays off screen
 const codeA=REAL.code.filter(l=>l.trim()&&l.length<90);
 const thoughts=['Thinking… these dicts are saved as JSON, so every key has to stay exactly as it is','Pages read these files too; the record must keep keys it does not declare','A field the file lacked should stay out of the JSON until the code sets it','from and in are Python keywords, so those keys need a different field name'];
 function termLines(n){

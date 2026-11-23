@@ -3,9 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="InTheLoop: turn maps, change maps, PR maps and visual docs that help you understand the code your AI agent writes.">
-<style>:root{color-scheme:light;box-sizing:border-box}body{margin:0;padding:0}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <title>InTheLoop</title>
+<meta name="description" content="InTheLoop: turn maps, change maps, PR maps and visual docs that help you understand the code your AI agent writes.">
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@500;700;800&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -126,8 +128,8 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--how); outline-o
 .chart-side .plot { flex: 1; height: auto; min-height: 120px; }
 .chart-side .cell small { font-size: 12px; min-height: 3.9em; }
 .chart-side .gap-note { position: absolute; bottom: 0; left: 0; }
-.show-nav { display: flex; gap: 6px; align-items: center; max-width: 440px; margin: 30px auto 0; }
-.show-dot { flex: 1; position: relative; overflow: hidden; font: 600 13px/1 var(--f-body); color: var(--muted); background: var(--chip); border: 0; border-radius: 999px; padding: 10px 12px; cursor: pointer; }
+.show-nav { display: flex; gap: 6px; align-items: center; width: max-content; margin-top: 30px; position: relative; left: 50%; transform: translateX(-50%); }
+.show-dot { flex: none; white-space: nowrap; position: relative; overflow: hidden; font: 600 13px/1 var(--f-body); color: var(--muted); background: var(--chip); border: 0; border-radius: 999px; padding: 10px 13px; cursor: pointer; }
 .show-dot:hover, .show-dot.is-on { color: var(--ink); }
 .show-dot i { position: absolute; inset: auto 0 0; height: 3px; background: var(--how); transform: scaleX(0); transform-origin: left; }
 .show-dot.is-on i { animation: show-fill 7s linear forwards; }
@@ -162,33 +164,84 @@ section.band { padding-block: 76px; border-top: 1px solid var(--line); }
 .stages .how { color: var(--muted); }
 .stages .how b { color: var(--ink); font-weight: 600; }
 #tools .band-h { align-items: start; }
-/* why it matters: the reader's payoff, placed before any mechanics */
-.why { display: grid; grid-template-columns: 1fr 2fr; gap: 16px; }
+/* why it matters: what unread AI code costs a team, as two pictures (where an engineer's year goes, and where the
+   pipeline jams). Red = cost, green = what InTheLoop does about it; ink and grey carry no meaning */
+.why { display: grid; gap: 22px; }
 .why > * { min-width: 0; }
-.stat { background: var(--ink); color: var(--bg); border-radius: 14px; padding: 26px 24px; display: grid; gap: 12px; align-content: space-between; }
-.stat .big { font: 800 clamp(48px, 6vw, 76px)/.9 var(--f-display); letter-spacing: -.03em; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.stat p { font-size: 16px; line-height: 1.5; }
-.stat small { font-size: 12px; opacity: .7; line-height: 1.45; }
-.stat small a { color: inherit; }
-.payers { display: grid; gap: 10px; align-content: start; }
-.payers > small { font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
-.outcomes { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-.outcome { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 22px; display: grid; grid-template-rows: auto auto 1fr auto; gap: 8px; border-top: 4px solid var(--c, var(--how)); }
-.outcome .who { font: 500 11.5px/1.3 var(--f-mono); color: var(--muted); }
-.outcome h3 { font-size: 20px; font-weight: 700; line-height: 1.2; }
-.outcome p { font-size: 15px; color: var(--muted); }
-/* outcome cards that jump to the tool behind them */
-a.outcome { color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
-a.outcome:hover { border-color: var(--c); transform: translateY(-2px); }
-a.outcome h3::after { content: " →"; color: var(--c); }
+.why-k { font: 600 11px/1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.fig { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 26px 28px 22px; }
+/* 1. one engineer's working year */
+.cost-row { display: grid; grid-template-columns: 1fr 260px; gap: 32px; align-items: center; margin-top: 18px; }
+.year { display: flex; height: 56px; border-radius: 8px; overflow: hidden; position: relative; }
+/* a faint tick between weeks, so the bar reads as 48 countable weeks */
+.year::after { content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background: linear-gradient(to right, transparent calc(100% - 1.5px), var(--surface) 0) 0 0 / calc(100% / 48) 100%; }
+.yseg > i { position: relative; z-index: 1; font-style: normal; }
+.yseg { display: flex; align-items: center; justify-content: center; padding-inline: 4px; font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; }
+.yseg.base { flex: 3.8; background: color-mix(in srgb, var(--muted) 45%, var(--chip)); color: var(--surface); }
+.yseg.base.rw { flex: 4.6; box-shadow: inset 3px 0 0 var(--surface); }
+.yseg.build { flex: 30.6; background: var(--chip); color: var(--muted); justify-content: flex-start; padding-left: 16px; }
+.yseg.review { flex: 5.5; color: #fff;
+  background: linear-gradient(to right, #c22e26 63.6%, transparent 0),
+    repeating-linear-gradient(-45deg, #c22e26 0 5px, #e0857f 5px 10px); }
+.yseg.rework { flex: 3.5; background: #85201a; color: #fff; }
+.year-scale { display: flex; margin-top: 8px; font: 12px/1.35 var(--f-mono); color: var(--muted); }
+.year-scale > span { min-width: 0; }
+.year-scale b { display: block; font: 600 13px/1.35 var(--f-body); }
+.year-scale .s-build { flex: 30.6; }
+.year-scale .s-base.rw { flex: 4.6; }
+.year-scale .s-base { flex: 3.8; text-align: center; white-space: nowrap; }
+/* a bracket over the weeks AI-generated code adds */
+.over { display: flex; margin-bottom: 6px; }
+.over .o-gap { flex: 39; }
+.over .o-ai { flex: 9; position: relative; text-align: center; font: 700 13px/1 var(--f-body); color: var(--warning); padding-bottom: 9px; white-space: nowrap; }
+.over .o-ai::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px; border: 2px solid var(--warning); border-bottom: 0; border-radius: 3px 3px 0 0; }
+.year-key { display: flex; gap: 18px; margin-top: 14px; font-size: 13px; color: var(--muted); }
+.year-key span { display: inline-flex; align-items: center; gap: 7px; }
+.year-key i { width: 12px; height: 12px; border-radius: 3px; }
+.year-key .k-before { background: color-mix(in srgb, var(--muted) 45%, var(--chip)); }
+.year-key .k-added { background: #c22e26; }
+.year-scale .s-review { flex: 5.5; color: var(--warning); text-align: center; white-space: nowrap; }
+.year-scale .s-rework { flex: 3.5; color: var(--warning); text-align: center; white-space: nowrap; }
+.lost { border-left: 3px solid var(--warning); padding-left: 18px; }
+.lost b { display: block; font: 800 44px/1 var(--f-display); letter-spacing: -.02em; color: var(--warning); }
+.lost span { display: block; margin-top: 6px; font-size: 15px; line-height: 1.4; color: var(--muted); }
+/* 2. where it jams: AI writes, people review, it ships */
+.stages3 { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; }
+.stages3 > div { min-width: 0; padding-inline: 12px; }
+.stages3 h3 { font-size: 19px; font-weight: 700; }
+.stages3 .hit { margin-top: 4px; font: 700 26px/1.15 var(--f-display); color: var(--warning); }
+.stages3 .hit small { display: block; font: 500 13px/1.35 var(--f-body); color: var(--muted); margin-top: 2px; }
+.pipe svg { display: block; width: 100%; height: auto; margin-block: 6px 2px; }
+.pipe .p-body { fill: color-mix(in srgb, var(--muted) 16%, var(--surface)); }
+.pipe-key { display: flex; justify-content: center; gap: 22px; font-size: 13px; color: var(--muted); }
+.pipe-key span { display: inline-flex; align-items: center; gap: 7px; }
+.pipe-key svg { width: 26px; height: 18px; margin: 0; overflow: visible; }
+.pipe .p-pr { fill: var(--surface); stroke: var(--muted); stroke-width: 1.5; }
+.pipe .p-wait { fill: var(--surface); stroke: var(--warning); stroke-width: 1.5; }
+.pipe .p-bug { fill: var(--warning); }
+.pipe .p-skip { fill: none; stroke: var(--warning); stroke-width: 2; stroke-dasharray: 6 5; }
+.pipe .p-head { fill: var(--warning); }
+.pipe .p-note { font: 600 13px var(--f-body); fill: var(--warning); }
+.pipe .p-who { fill: var(--muted); }
+.fixes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 12px; }
+.fix { display: block; text-decoration: none; padding: 12px 14px; border-radius: 10px; background: var(--give-soft); border: 1px solid color-mix(in srgb, var(--give) 35%, transparent); transition: border-color .15s, transform .15s; }
+.fix:hover { border-color: var(--give); transform: translateY(-2px); }
+.fix b { display: block; color: var(--give); font-weight: 600; font-size: 14px; }
+.fix b::after { content: " →"; }
+.fix span { display: block; font-size: 14px; line-height: 1.45; margin-top: 2px; }
+.why-note { display: flex; gap: 14px; align-items: baseline; margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--line); font-size: 15px; color: var(--muted); }
+.why-note b { color: var(--ink); font-weight: 600; }
+.why-src { font-size: 12px; line-height: 1.5; color: var(--muted); }
+.why-src a { color: inherit; }
 html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } a.outcome:hover { transform: none; } }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } .fix:hover { transform: none; } }
 .tool { scroll-margin-top: 16px; }
-.outcome .shift { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; font-size: 14px; margin-top: 4px; }
-.outcome .shift s { color: var(--muted); text-decoration-color: var(--muted); }
-.outcome .shift b { color: var(--c, var(--how)); font-weight: 600; }
-@media (max-width: 860px) { .why { grid-template-columns: 1fr; } }
-@media (max-width: 560px) { .outcomes { grid-template-columns: 1fr; } }
+/* the lost weeks grow in from the end of the year once the picture is on screen */
+@keyframes grow-x { from { transform: scaleX(0); } }
+html.anim .cost.in :is(.yseg.review, .yseg.rework) { transform-origin: right; animation: grow-x .7s cubic-bezier(.2, .7, .2, 1) .35s backwards; }
+html.anim .cost.in .yseg.rework { animation-delay: .2s; }
+html.anim .pipe.in :is(.p-skip, .p-wait, .p-bug) { animation: fadein .6s ease .4s backwards; }
 
 /* visual docs miniature: How the code works tab */
 .tabs .t2.on { color: var(--ink); background: var(--decision-soft); }
@@ -248,7 +301,7 @@ html { scroll-behavior: smooth; }
 .tool :is(.tool-debt, .tool-pay) > ul { margin: 14px 0 0; padding: 0; list-style: none; display: grid; gap: 10px; }
 .tool :is(.tool-debt, .tool-pay) > ul > li { padding-left: 22px; position: relative; color: var(--muted); }
 .tool :is(.tool-debt, .tool-pay) > ul > li b { color: var(--ink); font-weight: 600; }
-.tool :is(.tool-debt, .tool-pay) > ul > li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--muted); }
+.tool :is(.tool-debt, .tool-pay) > ul > li::before { content: ""; position: absolute; left: 2px; top: calc(.8em - 5px); width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--muted); }
 .tool .side { font: 600 11px/1 var(--f-body); letter-spacing: .1em; text-transform: uppercase; }
 .tool .debt-side { color: var(--warning); }
 .tool .pay-side { color: var(--give); }
@@ -520,24 +573,37 @@ html.anim .flow b.new::after { animation: newdot 1.6s ease-in-out 3; }
 .bdtree ul { padding-left: 8px; } .bdtree ul::before { width: 8px; }
 .bdtree li { padding-left: 10px; } .bdtree .stem { width: 10px; }
 #change-maps .groups b, .pic .groups b { padding: 5px 7px; }
+
+/* What cognitive debt costs: looping focus. The year bar dims the weeks already spent before AI so the AI overhead
+   stands out, then lets go; the pipeline lights its three stages in turn, each with its part of the picture */
+@keyframes ai-dim { 0%, 12%, 88%, 100% { opacity: 1; } 24%, 76% { opacity: .3; } }
+@keyframes ai-glow { 0%, 12%, 88%, 100% { filter: none; } 24%, 76% { filter: brightness(1.18) saturate(1.15); } }
+@keyframes ai-lift { 0%, 12%, 88%, 100% { transform: none; } 24%, 76% { transform: translateY(-4px) scale(1.08); } }
+@keyframes ai-big { 0%, 12%, 88%, 100% { transform: none; } 24%, 76% { transform: scale(1.07); } }
+html.anim .cost.in .yseg.review { transform-origin: right; animation: grow-x .7s cubic-bezier(.2, .7, .2, 1) .35s backwards, ai-glow 6s ease-in-out 1.6s infinite; }
+html.anim .cost.in .yseg.rework { transform-origin: right; animation: grow-x .7s cubic-bezier(.2, .7, .2, 1) .55s backwards, ai-glow 6s ease-in-out 1.6s infinite; }
+html.anim .cost.in :is(.yseg.build, .yseg.base, .year-scale .s-build, .year-scale .s-base) { animation: ai-dim 6s ease-in-out 1.6s infinite; }
+html.anim .cost.in .over .o-ai { animation: ai-lift 6s ease-in-out 1.6s infinite; }
+html.anim .cost.in :is(.year-scale .s-review, .year-scale .s-rework) { animation: ai-lift 6s ease-in-out 1.6s infinite; }
+html.anim .cost.in .lost b { transform-origin: left center; animation: ai-big 6s ease-in-out 1.6s infinite; }
+.stages3 > div { border-radius: 12px; padding-block: 8px; }
+@keyframes stage-on { 0%, 33.3%, 100% { background: transparent; box-shadow: none; } 5%, 28% { background: var(--warning-soft); box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--warning) 40%, transparent); } }
+@keyframes stage-hit { 0%, 33.3%, 100% { transform: none; } 5%, 28% { transform: scale(1.05); } }
+@keyframes pr-on { 0%, 33.3%, 100% { fill: var(--surface); } 5%, 28% { fill: var(--warning-soft); } }
+@keyframes wait-on { 0%, 33.3%, 100% { fill: var(--surface); stroke-width: 1.5; } 5%, 28% { fill: var(--warning-soft); stroke-width: 3; } }
+@keyframes bug-on { 0%, 33.3%, 100% { transform: none; } 6%, 27% { transform: scale(1.7); } }
+@keyframes skip-on { 0%, 33.3%, 100% { stroke-width: 2; } 5%, 28% { stroke-width: 3.5; } }
+@keyframes dash-flow { to { stroke-dashoffset: -22; } }
+html.anim .pipe.in .stages3 > div { animation: stage-on 7.5s ease-in-out infinite; }
+html.anim .pipe.in .stages3 .hit { animation: stage-hit 7.5s ease-in-out infinite; }
+html.anim .pipe.in .stages3 > div:nth-child(2), html.anim .pipe.in .stages3 > div:nth-child(2) .hit { animation-delay: 2.5s; }
+html.anim .pipe.in .stages3 > div:nth-child(3), html.anim .pipe.in .stages3 > div:nth-child(3) .hit { animation-delay: 5s; }
+html.anim .pipe.in svg .p-in { animation: pr-on 7.5s ease-in-out infinite; }
+html.anim .pipe.in svg .p-wait { animation: fadein .6s ease .4s backwards, wait-on 7.5s ease-in-out 2.5s infinite; }
+html.anim .pipe.in svg .p-flow { animation: fadein .6s ease .4s backwards, dash-flow 1.1s linear infinite, skip-on 7.5s ease-in-out 2.5s infinite; }
+html.anim .pipe.in svg .p-out { animation: pr-on 7.5s ease-in-out 5s infinite; }
+html.anim .pipe.in svg .p-bug { transform-box: fill-box; transform-origin: center; animation: fadein .6s ease .4s backwards, bug-on 7.5s ease-in-out 5s infinite; }
 </style>
-<script>
-/* PostHog: clicks (autocapture), page views and time spent. No cookies or local storage are used. */
-!function(t,e){var o,n,p,r;e.__SV||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}(p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r);var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],u.toString=function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e},u.people.toString=function(){return u.toString(1)+".people (stub)"},o="init capture register register_once unregister identify alias people.set people.set_once reset opt_in_capturing opt_out_capturing has_opted_out_capturing onFeatureFlags getFeatureFlag isFeatureEnabled reloadFeatureFlags group".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
-posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https://us.i.posthog.com',persistence:'memory',person_profiles:'identified_only',capture_pageview:true,capture_pageleave:true,autocapture:true});
-/* page_time: seconds the tab was actually visible, sent each time the visitor hides or leaves the page (take the largest per visit) */
-(function(){
-  var vis=0,t0=document.visibilityState==='visible'?performance.now():null,sent=-1;
-  function stop(){if(t0!==null){vis+=performance.now()-t0;t0=null}}
-  function send(){var s=Math.round(vis/1000);if(s===sent)return;sent=s;
-    var p={seconds:s};if(window.demoWatched)p.watched_seconds=Math.round(window.demoWatched());
-    posthog.capture('page_time',p,{transport:'sendBeacon'})}
-  document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden'){stop();send()}else t0=performance.now()});
-  addEventListener('pagehide',function(){stop();send()});
-})();
-</script>
-</head>
-<body>
 
 <div class="wrap">
   <header class="top">
@@ -550,7 +616,7 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
     </nav>
   </header>
 
-  <section class="hero show" id="top" aria-roledescription="carousel" aria-label="Before and after: turn maps, change maps, cognitive debt">
+  <section class="hero show" id="top" aria-roledescription="carousel" aria-label="Before and after: Turn Recap, Change Walkthrough, cognitive debt">
     <figure class="hero-side side-before" aria-label="Before">
       <div class="slides">
         <div class="slide is-on"><div class="pic" data-clone="turn-maps"></div></div>
@@ -573,16 +639,16 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
     <div class="hero-text">
       <p class="eyebrow">For developers who build with Claude Code</p>
       <h1 style="margin-top:16px"><em class="added">Understand code</em><br>your AI agent writes<br><em class="removed">without burning out</em></h1>
-      <p class="lede">AI agents write code faster than you can absorb it, and the gap between what your codebase does and what you know grows every session. That gap is <b>cognitive debt</b>. InTheLoop closes it with visual pages that build your mental model before you read a line of code.</p>
+      <p class="lede">AI agents write code faster than you can absorb it, and the gap between what your codebase does and what you know grows every session. That gap is <b>cognitive debt</b>. Never let it build up by staying InTheLoop with visual maps of what your agent builds, so you have the mental model before you read a line of code.</p>
       <div class="cta">
         <a class="btn solid" href="https://cal.com/venkata-malireddy/demo" target="_blank" rel="noopener">Book a call</a>
       </div>
       <div class="cta" style="margin-top:12px">
-        <a class="btn ghost" href="https://vm217.github.io/InTheLoop/demo/" target="_blank" rel="noopener"><span aria-hidden="true">▶</span> Watch the demo · 1:44</a>
+        <a class="btn ghost" href="demo/" target="_blank" rel="noopener"><span aria-hidden="true">▶</span> Watch the demo · 1:44</a>
       </div>
       <div class="show-nav">
-        <button type="button" class="show-dot is-on" aria-current="true">Turn maps<i></i></button>
-        <button type="button" class="show-dot" aria-current="false">Change maps<i></i></button>
+        <button type="button" class="show-dot is-on" aria-current="true">Turn Recap<i></i></button>
+        <button type="button" class="show-dot" aria-current="false">Walkthrough<i></i></button>
         <button type="button" class="show-dot" aria-current="false">Cognitive debt<i></i></button>
         <button type="button" class="show-pause" aria-pressed="false" aria-label="Pause slideshow">❚❚</button>
       </div>
@@ -611,23 +677,39 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
   <section class="band" id="why">
     <div class="band-h">
       <div><p class="eyebrow">What cognitive debt costs</p><h2 style="margin-top:12px">Less time decoding code. More time building with it.</h2></div>
-      <p><b>Skim, and you ship code you don't understand. Read every line, and you're exhausted by Thursday.</b> Skimming builds cognitive debt, and like any debt, it comes due with interest. Engineers already spend most of their day understanding code; every unread line an agent writes adds to that bill, and reviewers, on-call engineers and new hires all pay it. InTheLoop pays it down as the code arrives.</p>
+      <p><b>Much of the speed AI adds to writing code is lost after it's written.</b> Every engineer pays it back in hours spent reviewing AI-generated code and untangling the production incidents it causes.</p>
     </div>
     <div class="why">
-      <div class="stat">
-        <span class="big">58–70%</span>
-        <p>of a developer's time went to understanding code, not writing it, in studies from before AI agents. Agents now add code faster than anyone can read it. InTheLoop gives you the mental model before you open a file.</p>
-        <small><a href="https://ink.library.smu.edu.sg/sis_research/3779" target="_blank" rel="noopener">Xia et al., 2018</a> (about 58%, field study of 78 professionals); <a href="https://sonar.ch/documents/328164/files/Mine2015b.pdf" target="_blank" rel="noopener">Minelli et al., 2015</a> (about 70%, IDE sessions).</small>
-      </div>
-      <div class="payers">
-      <small>Who pays the interest, and what changes</small>
-      <div class="outcomes">
-        <a class="outcome go" href="#turn-maps" style="--c:var(--decision)"><span class="who">for the author</span><h3>Keep up with your own agent</h3><p>Each turn ends with what was delivered and what needs your call, so you stay on top of the code you asked for.</p><div class="shift"><s>skim and hope</s><b>follow every turn</b></div></a>
-        <a class="outcome go" href="#pr-maps" style="--c:var(--how)"><span class="who">for reviewers</span><h3>Understand a PR before you judge it</h3><p>Reviewers understand a PR before they open the code: its background, a flow diagram, and the diff split into small explained pieces.</p><div class="shift"><s>decoding what the diff is for</s><b>starting from its purpose</b></div></a>
-        <a class="outcome go" href="#change-maps" style="--c:var(--warning)"><span class="who">for whoever's on call</span><h3>Fewer surprises after merge</h3><p>Every change carries why and how it was made, so debugging can start from the reason instead of "who wrote this, and why?"</p><div class="shift"><s>archaeology at 2am</s><b>the why is on record</b></div></a>
-        <a class="outcome go" href="#visual-docs" style="--c:var(--give)"><span class="who">for newcomers, and you after a break</span><h3>A working mental model before the first file</h3><p>Visual docs explain the product, the code and its history, so you start from how it all fits together, not from a file tree.</p><div class="shift"><s>piecing it together from files</s><b>the big picture first</b></div></a>
-      </div>
-      </div>
+      <figure class="fig cost" style="margin:0">
+        <p class="why-k">One engineer's working year (48 weeks)</p>
+        <div class="cost-row">
+          <div>
+            <div class="over"><span class="o-gap"></span><span class="o-ai">AI overhead</span></div>
+            <div class="year" role="img" aria-label="Of 48 working weeks, about 4 went to code review and about 4 and a half to rework before AI. AI-generated code adds up to 5 and a half more weeks of review and about 3 and a half of rework">
+              <span class="yseg build"><i>Building the product</i></span><span class="yseg base"></span><span class="yseg base rw"></span><span class="yseg review"></span><span class="yseg rework"></span>
+            </div>
+            <div class="year-scale"><span class="s-build">≈31 weeks left for building</span><span class="s-base"><b>Review</b>≈4 wk</span><span class="s-base rw"><b>Rework</b>≈4½ wk</span><span class="s-review"><b>+Review</b>3½–5½ wk</span><span class="s-rework"><b>+Rework</b>3½ wk</span></div>
+            <div class="year-key"><span><i class="k-before"></i>Already spent before AI</span><span><i class="k-added"></i>Added by AI-generated code</span></div>
+          </div>
+          <div class="lost"><b>Up to 2 more months</b><span>of every engineer's year, added by reviewing and reworking AI-generated code.</span></div>
+        </div>
+      </figure>
+      <figure class="fig pipe" style="margin:0">
+        <p class="why-k">AI writes ~3× the code. Review hasn't kept up</p>
+        <div class="stages3" style="margin-top:14px">
+          <div><h3>AI writes</h3><p class="hit">~3× the code<small>per engineer, in one year</small></p></div>
+          <div><h3>People review</h3><p class="hit">only 2 in 3 PRs<small>and comment on just 1 in 5</small></p></div>
+          <div><h3>It ships</h3><p class="hit">before it's understood<small>81% of teams have merged AI code they didn't fully understand</small></p></div>
+        </div>
+        <svg viewBox="0 -54 1040 234" role="img" aria-label="AI writes about three times the code; pull requests pile up waiting at review, many skip it unread, and what ships carries more bugs"><path class="p-body" d="M0,10 H290 C350,10 370,60 420,60 H620 C670,60 690,20 750,20 H1040 V160 H750 C690,160 670,120 620,120 H420 C370,120 350,170 290,170 H0 Z"/><rect class="p-pr p-in" x="22" y="30" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="58" y="30" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="94" y="30" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="130" y="30" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="166" y="30" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="202" y="30" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="238" y="30" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="22" y="62" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="58" y="62" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="94" y="62" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="130" y="62" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="166" y="62" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="202" y="62" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="238" y="62" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="22" y="94" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="58" y="94" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="94" y="94" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="130" y="94" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="166" y="94" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="202" y="94" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="238" y="94" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="22" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="58" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="94" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="130" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="166" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="202" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-in" x="238" y="126" width="26" height="16" rx="3"/><rect class="p-wait" x="268" y="36" width="26" height="16" rx="3"/><rect class="p-wait" x="268" y="60" width="26" height="16" rx="3"/><rect class="p-wait" x="268" y="84" width="26" height="16" rx="3"/><rect class="p-wait" x="268" y="108" width="26" height="16" rx="3"/><rect class="p-wait" x="268" y="132" width="26" height="16" rx="3"/><rect class="p-wait" x="302" y="44" width="26" height="16" rx="3"/><rect class="p-wait" x="302" y="68" width="26" height="16" rx="3"/><rect class="p-wait" x="302" y="92" width="26" height="16" rx="3"/><rect class="p-wait" x="302" y="116" width="26" height="16" rx="3"/><rect class="p-wait" x="336" y="52" width="26" height="16" rx="3"/><rect class="p-wait" x="336" y="76" width="26" height="16" rx="3"/><rect class="p-wait" x="336" y="100" width="26" height="16" rx="3"/><rect class="p-wait" x="370" y="64" width="26" height="16" rx="3"/><rect class="p-wait" x="370" y="88" width="26" height="16" rx="3"/><rect class="p-pr" x="507" y="82" width="26" height="16" rx="3"/><circle class="p-who" cx="520" cy="136" r="7"/><path class="p-who" d="M506,162 a14,13 0 0 1 28,0 z"/><path class="p-skip p-flow" d="M300,8 C380,-35 660,-35 740,14"/><path class="p-head" d="M748,20 L733,17 L742,6 z"/><rect class="p-pr" x="380" y="-23" width="22" height="14" rx="3"/><circle class="p-bug" cx="402" cy="-23" r="4.5"/><rect class="p-pr" x="510" y="-30" width="22" height="14" rx="3"/><circle class="p-bug" cx="532" cy="-30" r="4.5"/><rect class="p-pr" x="640" y="-20" width="22" height="14" rx="3"/><circle class="p-bug" cx="662" cy="-20" r="4.5"/><text class="p-note" x="520" y="-38" text-anchor="middle">merged without a real review</text><rect class="p-pr p-out" x="788" y="36" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="826" y="36" width="26" height="16" rx="3"/><circle class="p-bug" cx="852" cy="36" r="4.5"/><rect class="p-pr p-out" x="864" y="36" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="902" y="36" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="940" y="36" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="978" y="36" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="788" y="66" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="826" y="66" width="26" height="16" rx="3"/><circle class="p-bug" cx="852" cy="66" r="4.5"/><rect class="p-pr p-out" x="864" y="66" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="902" y="66" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="940" y="66" width="26" height="16" rx="3"/><circle class="p-bug" cx="966" cy="66" r="4.5"/><rect class="p-pr p-out" x="978" y="66" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="788" y="96" width="26" height="16" rx="3"/><circle class="p-bug" cx="814" cy="96" r="4.5"/><rect class="p-pr p-out" x="826" y="96" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="864" y="96" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="902" y="96" width="26" height="16" rx="3"/><circle class="p-bug" cx="928" cy="96" r="4.5"/><rect class="p-pr p-out" x="940" y="96" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="978" y="96" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="788" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="826" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="864" y="126" width="26" height="16" rx="3"/><circle class="p-bug" cx="890" cy="126" r="4.5"/><rect class="p-pr p-out" x="902" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="940" y="126" width="26" height="16" rx="3"/><rect class="p-pr p-out" x="978" y="126" width="26" height="16" rx="3"/><circle class="p-bug" cx="1004" cy="126" r="4.5"/></svg>
+        <div class="pipe-key"><span><svg viewBox="0 0 26 18"><rect class="p-pr" x="1" y="2" width="24" height="14" rx="3"/></svg>a pull request</span><span><svg viewBox="0 0 26 18"><rect class="p-wait" x="1" y="2" width="24" height="14" rx="3"/></svg>waiting for review</span><span><svg viewBox="0 0 26 18"><rect class="p-pr" x="1" y="4" width="22" height="13" rx="3"/><circle class="p-bug" cx="23" cy="4" r="4.5"/></svg>carries an issue</span></div>
+        <div class="fixes">
+          <a class="fix" href="#turn-maps"><b>Turn Recap</b><span>The author follows every turn as the agent writes it.</span></a>
+          <a class="fix" href="#pr-maps"><b>PR Briefing and Change Walkthrough</b><span>Reviewers start from what the PR is for, then read it in small explained pieces.</span></a>
+          <a class="fix" href="#change-maps"><b>Change Walkthrough and Codebase Atlas</b><span>When something breaks, why each change was made is on record.</span></a>
+        </div>
+      </figure>
+      <p class="why-src">Review: 3.2 h/week before AI (<a href="https://research.google/pubs/modern-code-review-a-case-study-at-google/" target="_blank" rel="noopener">Sadowski et al., Google, 2018</a>) and +91% with heavy AI use (<a href="https://www.faros.ai/blog/ai-productivity-paradox-report-2025" target="_blank" rel="noopener">Faros AI, 2025</a>); the striped part is the upper range, if all of that is hands-on time. Rework before AI: 3.8 h/week fixing bad code (<a href="https://stripe.com/files/reports/the-developer-coefficient.pdf" target="_blank" rel="noopener">Stripe, 2018</a>); fixing AI-assisted code: 139+ hours a year (<a href="https://leaddev.com/ai/engineers-lose-17-days-a-year-to-ai-rework" target="_blank" rel="noopener">ActiveState, 2026</a>), some of which may replace rework human-written code would have needed. Code per engineer: 2.4–3.5× lines changed per developer over 2025–26 (<a href="https://www.greptile.com/reports/state-of-ai-coding" target="_blank" rel="noopener">Greptile, 2026</a>; Cursor), counted as lines, not value. Review coverage: PRs with any human review fell from 89% to 68%, and with a human comment from 39% to 21%, at one company of several hundred engineers using Claude Code (<a href="https://arxiv.org/abs/2607.01904" target="_blank" rel="noopener">arXiv 2607.01904, 2026</a>). Merged without full understanding: <a href="https://itbrief.com.au/story/most-teams-merge-ai-code-they-do-not-fully-understand" target="_blank" rel="noopener">TestMu AI, 2026</a>. The two costs may overlap in part.</p>
     </div>
   </section>
 
@@ -638,10 +720,10 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
         <p>Cognitive debt builds up wherever code arrives faster than you take it in. Each tool closes the gap where it usually opens. One example runs through all four: making a CSV export resume after a crash. The After pictures work like the real pages, so click their cards, groups and tabs.</p>
         <!-- debt / question / how per tool; hidden for now, remove `hidden` to show it again -->
         <ol hidden>
-          <li><b>Each turn</b><div><p class="debt-line"><span>Debt</span>Each turn delivers more than you can take in, so details of what was delivered slip past, along with the choices Claude made and its reasons.</p><p class="q">What did this turn deliver, and what did Claude decide on its own?</p><p class="how"><b>Turn maps</b> lead with what was delivered and what changed, list each call Claude made and why, and flag what's waiting on you.</p></div></li>
-          <li><b>Each change</b><div><p class="debt-line"><span>Debt</span>Parts of the code stay unclear, and every edit built on those parts adds to the debt.</p><p class="q">What is each part of this edit for?</p><p class="how"><b>Change maps</b> draw the edit as a tree of groups (which ones deliver the change, which ones make them possible), then walk through each group's steps alongside its diff.</p></div></li>
-          <li><b>Each pull request</b><div><p class="debt-line"><span>Debt</span>Reviewers spend most of their time working out what the diff is for before they can judge it.</p><p class="q">What is this PR for, and how does each part serve it?</p><p class="how"><b>PR maps</b> build the mental model before you read a line of code: the objective, background, flow diagrams of how the changed code runs, then the diff in explained groups.</p></div></li>
-          <li><b>The whole repo</b><div><p class="debt-line"><span>Debt</span>The codebase outgrows anyone's picture of it, and the reasons behind each change get lost.</p><p class="q">Which code is responsible for which product behavior, and how and why was it built that way?</p><p class="how"><b>Visual docs</b> explain the product as its users experience it, map that behavior to the parts of the code responsible for it, and link every change map that touched those parts. New hires step through those changes to see how it was built, and on-call engineers go back to them to see why.</p></div></li>
+          <li><b>Each turn</b><div><p class="debt-line"><span>Debt</span>Each turn delivers more than you can take in, so details of what was delivered slip past, along with the choices Claude made and its reasons.</p><p class="q">What did this turn deliver, and what did Claude decide on its own?</p><p class="how"><b>Turn Recap</b> leads with what was delivered and what changed, list each call Claude made and why, and flag what's waiting on you.</p></div></li>
+          <li><b>Each change</b><div><p class="debt-line"><span>Debt</span>Parts of the code stay unclear, and every edit built on those parts adds to the debt.</p><p class="q">What is each part of this edit for?</p><p class="how"><b>Change Walkthrough</b> draws the edit as a tree of groups (which ones deliver the change, which ones make them possible), then walk through each group's steps alongside its diff.</p></div></li>
+          <li><b>Each pull request</b><div><p class="debt-line"><span>Debt</span>Reviewers spend most of their time working out what the diff is for before they can judge it.</p><p class="q">What is this PR for, and how does each part serve it?</p><p class="how"><b>PR Briefing</b> builds the mental model before you read a line of code: the objective, background, flow diagrams of how the changed code runs, then the diff in explained groups.</p></div></li>
+          <li><b>The whole repo</b><div><p class="debt-line"><span>Debt</span>The codebase outgrows anyone's picture of it, and the reasons behind each change get lost.</p><p class="q">Which code is responsible for which product behavior, and how and why was it built that way?</p><p class="how"><b>Codebase Atlas</b> explains the product as its users experience it, map that behavior to the parts of the code responsible for it, and link every Change Walkthrough that touched those parts. New hires step through those changes to see how it was built, and on-call engineers go back to them to see why.</p></div></li>
         </ol>
       </div>
     </div>
@@ -649,7 +731,7 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
     <!-- Turn maps -->
     <article class="tool" id="turn-maps">
       <div class="tool-head">
-        <div class="tool-title"><h3>Each turn <span class="tname">Turn maps</span></h3><span class="when">updates after every turn</span></div>
+        <div class="tool-title"><h3>Turn Recap</h3><span class="when">updates after every turn</span></div>
         <p class="ask">What did this turn deliver, and what did Claude decide on its own?</p>
         <p class="goal">One card per turn shows what was delivered, the calls Claude made and what it needs from you, so you don't have to read the whole trace.</p>
       </div>
@@ -770,9 +852,9 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
         <div class="tool-debt">
           <p class="side debt-side">What goes wrong</p>
           <ul class="debts">
-            <li><b>The reply is one block at the end of a long scroll.</b> What was delivered, decided and left open all read the same.</li>
-            <li><b>Claude's own calls look like details.</b> Checkpointing every 1,000 rows is a decision you might have made differently, yet it sits in a bullet about <code>export.py</code>.</li>
-            <li><b>Each turn pushes the last one away.</b> The question waiting on you is the end of a paragraph, and the next prompt scrolls it off.</li>
+            <li><b>Hard to read and understand.</b> Terminal output in the order Claude reasoned.</li>
+            <li><b>Decisions get buried.</b> Decisions Claude made on its own get lost in the clutter.</li>
+            <li><b>Context disappears.</b> Context built up during the chat session gets lost.</li>
           </ul>
         </div>
       </div>
@@ -817,13 +899,12 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
         </div>
         </div>
         <div class="tool-pay">
-          <p class="side pay-side">How turn maps fix it</p>
+          <p class="side pay-side">How Turn Recap fixes it</p>
           <ul>
-            <li><b>What was delivered, and how,</b> without reading the whole reasoning trace and terminal output.</li>
-            <li><b>Code changes, broken down.</b> When a turn edits code, its turn card links to a change map that splits the edit into small, explained diffs.</li>
-            <li><b>What needs your attention,</b> given your goal: the decisions Claude made on its own judgment, and what it's waiting on you for.</li>
+            <li><b>Built for reading.</b> Visual blocks designed for intuitive human understanding.</li>
+            <li><b>Decisions surfaced.</b> Decisions made by Claude are tagged with their sources and reasoning.</li>
+            <li><b>Kept for later.</b> Turn Recaps are preserved for retrospection.</li>
           </ul>
-          <p class="where">Writes one page per session and one card per turn.</p>
         </div>
       </div>
     </article>
@@ -831,9 +912,9 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
     <!-- Change maps -->
     <article class="tool" id="change-maps">
       <div class="tool-head">
-        <div class="tool-title"><h3>Each code change <span class="tname">Change maps</span></h3><span class="when">part of turn maps · for every turn that edits code</span></div>
+        <div class="tool-title"><h3>Change Walkthrough</h3><span class="when">part of Turn Recap · for every turn that edits code</span></div>
         <p class="ask">What is each part of this edit for?</p>
-        <p class="goal">An AI produces hundreds of lines in a single turn, and code is hard to read. Change maps break that change into several small diffs you understand one at a time.</p>
+        <p class="goal">An AI produces hundreds of lines in a single turn, and code is hard to read. Change Walkthrough breaks that change into several small diffs and explains each one with its background and changes.</p>
       </div>
       <div class="col col-before">
         <div class="bfaf">
@@ -907,7 +988,7 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
           <p class="side debt-side">What goes wrong</p>
           <ul class="debts">
             <li><b>Read by file, not by purpose.</b> A diff lists lines top to bottom, so nothing groups the edits that work together.</li>
-            <li><b>No structure.</b> Nothing says which edits deliver the change and which only make them possible.</li>
+            <li><b>No structure.</b> The purpose of each part of the change is rarely obvious and needs time to be decoded.</li>
             <li><b>Unclear parts compound.</b> Code you only half understand stays that way, and the next turn builds on it.</li>
           </ul>
         </div>
@@ -983,12 +1064,12 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
           </div>
         </div>
         <div class="tool-pay">
-          <p class="side pay-side">How change maps fix it</p>
+          <p class="side pay-side">How Change Walkthrough fixes it</p>
           <ul>
             <li><b>The breakdown first.</b> A tree drawn sideways shows the whole change, the groups that deliver it, and the groups that make those possible.</li>
             <li><b>Virtual diffs.</b> Each group of edits has its own objective, the background you need, the steps it adds, and how it serves the larger goal of the change.</li>
           </ul>
-          <p class="where">Linked from each turn's card in turn maps and from visual docs' How it was built tab.</p>
+          <p class="where">Linked from each turn's card in Turn Recap and from Codebase Atlas's How it was built tab.</p>
         </div>
       </div>
     </article>
@@ -996,7 +1077,7 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
     <!-- PR maps -->
     <article class="tool" id="pr-maps">
       <div class="tool-head">
-        <div class="tool-title"><h3>Each pull request <span class="tname">PR maps</span></h3><span class="when">updates when a PR opens and after every push</span></div>
+        <div class="tool-title"><h3>PR Briefing</h3><span class="when">updates when a PR opens and after every push</span></div>
         <p class="ask">What is this PR for, and how does each part serve it?</p>
         <p class="goal">Creates a web page for each pull request that explains it, then breaks its diff into smaller virtual diffs, each explained against what the PR is for.</p>
       </div>
@@ -1085,22 +1166,20 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
           </div>
         </div>
         <div class="tool-pay">
-          <p class="side pay-side">How PR maps fix it</p>
+          <p class="side pay-side">How PR Briefing fixes it</p>
           <ul>
             <li><b>Background first.</b> Where the effort stands, the tools and conventions the PR relies on, and a diagram of how the changed code runs.</li>
-            <li><b>Smaller diffs.</b> A change map breaks the diff into small, manageable groups and shows how each part of the code serves what the PR is for.</li>
-          </ul>
-          <p class="where">Writes <code>.pr-maps/prs/&lt;number&gt;.html</code> and adds a short summary block to the PR description.</p>
-        </div>
+            <li><b>Smaller diffs.</b> A Change Walkthrough breaks the diff into small, manageable groups and shows how each part of the code serves what the PR is for.</li>
+          </ul>        </div>
       </div>
     </article>
 
     <!-- Visual docs -->
     <article class="tool" id="visual-docs">
       <div class="tool-head">
-        <div class="tool-title"><h3>The whole codebase <span class="tname">Visual docs</span></h3><span class="when">updates after every turn that changes files</span></div>
+        <div class="tool-title"><h3>Codebase Atlas</h3><span class="when">updates after every turn that changes files</span></div>
         <p class="ask">Which code is responsible for which product behavior, and how and why was it built that way?</p>
-        <p class="goal">Gives anyone new to your codebase, or you after a break, a picture of how it works and why it was built that way.</p>
+        <p class="goal">Gives anyone new to your codebase a picture of how it works and why it was built that way.</p>
       </div>
       <div class="col col-before">
         <div class="bfaf">
@@ -1162,9 +1241,9 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
               <div class="vpane" data-pane="v3">
                 <div class="vsec">
                   <small>Every change, with why it was made</small>
-                  <div class="hist"><b>Exports resume after a crash</b><span>A crash at row 90,000 restarted the job from row 1.</span><em>change map →</em></div>
-                  <div class="hist"><b>Snapshot the source first</b><span>Rows changing mid-export made files inconsistent.</span><em>change map →</em></div>
-                  <div class="hist"><b>Retry failed jobs</b><span>Brief database errors were failing whole exports.</span><em>change map →</em></div>
+                  <div class="hist"><b>Exports resume after a crash</b><span>A crash at row 90,000 restarted the job from row 1.</span><em>walkthrough →</em></div>
+                  <div class="hist"><b>Snapshot the source first</b><span>Rows changing mid-export made files inconsistent.</span><em>walkthrough →</em></div>
+                  <div class="hist"><b>Retry failed jobs</b><span>Brief database errors were failing whole exports.</span><em>walkthrough →</em></div>
                 </div>
               </div>
               <div class="vpane on" data-pane="v2">
@@ -1186,15 +1265,13 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
           </div>
         </div>
         <div class="tool-pay">
-          <p class="side pay-side">How visual docs fix it</p>
+          <p class="side pay-side">How Codebase Atlas fixes it</p>
           <ul>
             <li><b>How it works</b> explains the product, the way its user experiences it.</li>
             <li><b>How the code works</b> explains the structure and parts of the codebase: what each part owns and how one run flows through it.</li>
             <li><b>How it was built</b> lists the history of changes, each with why and how it was made at the time it was made.</li>
             <li><b>It keeps itself current.</b> The docs update after every turn that changes files.</li>
-          </ul>
-          <p class="where">Writes <code>.visual-docs/docs.html</code>, plus one page per part of a larger repo.</p>
-        </div>
+          </ul>        </div>
       </div>
     </article>
 
@@ -1206,8 +1283,8 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
       <p>The rules every tool follows.</p>
     </div>
     <div class="principles">
-      <div><h3><i class="shape s-warn"></i>What if an explanation is wrong?</h3><p>It can be, so it stays checkable. Each step of a change map is pinned to a real hunk and shown with its diff, a symbol not found in that hunk is dropped, every hunk appears exactly once, and a turn's sources are its real tool calls.</p></div>
       <div><h3><i class="shape s-dec"></i>Pictures before prose</h3><p>Flows, diagrams, before-and-after tables and breakdown trees show the big picture at a glance, so you understand how things fit before reading any detail.</p></div>
+      <div><h3><i class="shape s-warn"></i>What if an explanation is wrong?</h3><p>It can be, so it stays checkable. Each step of a Change Walkthrough is pinned to a real hunk and shown with its diff, a symbol not found in that hunk is dropped, every hunk appears exactly once, and a turn's sources are its real tool calls.</p></div>
       <div><h3><i class="shape s-how"></i>Pages stay in your repo</h3><p>Pages are plain HTML files in your repo, with no InTheLoop server or account. Your code and conversation reach the model only through Claude Code. The one thing written elsewhere is a short summary block in the PR description.</p></div>
     </div>
   </section>
@@ -1239,7 +1316,7 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
   </section>
 
   <footer>
-    <span>InTheLoop: turn maps, change maps, PR maps and visual docs for Claude Code.</span>
+    <span>InTheLoop: Turn Recap, Change Walkthrough, PR Briefing and Codebase Atlas for Claude Code.</span>
   </footer>
 </div>
 
@@ -1432,7 +1509,7 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
     pause.textContent = paused ? "▶" : "❚❚";
   });
 
-  // Things that start when they come into view: sections rise in, terminals scroll past, pictures hint, the stat counts up.
+  // Things that start when they come into view: sections rise in, terminals scroll past, pictures hint.
   function onView(el, fn, threshold) {
     var io = new IntersectionObserver(function (es) {
       if (es.some(function (x) { return x.isIntersecting; })) { io.disconnect(); fn(el); }
@@ -1440,10 +1517,10 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
     io.observe(el);
   }
   if (!calm) {
-    ["#why .band-h", ".stat", ".payers > small", "#tools .band-h", ".tool-head", ".tool .col", "#principles .band-h", ".install > *", ".closing"].forEach(function (sel) {
+    ["#why .band-h", ".cost", ".pipe", ".why-src", "#tools .band-h", ".tool-head", ".tool .col", "#principles .band-h", ".install > *", ".closing"].forEach(function (sel) {
       document.querySelectorAll(sel).forEach(function (el) { el.classList.add("rv"); onView(el, function () { el.classList.add("in"); }, .08); });
     });
-    [".outcome", ".principles > div"].forEach(function (sel) {
+    [".fix", ".principles > div"].forEach(function (sel) {
       document.querySelectorAll(sel).forEach(function (el, i) {
         el.classList.add("rv");
         el.style.setProperty("--rv", (i * .08) + "s");
@@ -1476,15 +1553,6 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
         if (on && pre.closest(".slide").classList.contains("is-on")) scrollPast(pre, 5200, 500); else stopScroll(pre);
       });
     }).observe(show);
-    var big = document.querySelector(".stat .big");
-    onView(big, function () {
-      var t0 = performance.now();
-      requestAnimationFrame(function tick(t) {
-        var k = Math.min(1, (t - t0) / 1100), e = 1 - Math.pow(1 - k, 3);
-        big.textContent = Math.round(58 * e) + "\u2013" + Math.round(70 * e) + "%";
-        if (k < 1) requestAnimationFrame(tick);
-      });
-    });
   }
 
   go(0);
@@ -1504,8 +1572,97 @@ posthog.init('phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx',{api_host:'https
 })();
 </script>
 
+<script>
+/* Analytics (PostHog). Off until PH_KEY is set. Two kinds of event:
+   - "section_time": seconds a reader spent on each section, the section being the one under the middle of the
+     window; sent once per section when the tab is hidden or closed (and again for time spent after coming back).
+   - "click": every link, button and interactive-picture control, with its label and the section it sits in. */
+(function () {
+  var PH_KEY = "phc_CNB6MXFX6c4BSJVuKRZbkP3nhEcg48XRZ4DBoWWYaeEx"; // PostHog project API key (public by design)
+  var PH_HOST = "https://us.i.posthog.com"; // or https://eu.i.posthog.com
+  if (!PH_KEY) return;
+
+  // PostHog's own loader stub, with the library loaded from jsdelivr (artifacts may only load scripts from a few CDNs)
+  !function (t, e) {
+    var o, n, p, r;
+    e.__SV || (window.posthog = e, e._i = [], e.init = function (i, s, a) {
+      function g(t, e) { var o = e.split("."); 2 == o.length && (t = t[o[0]], e = o[1]); t[e] = function () { t.push([e].concat(Array.prototype.slice.call(arguments, 0))); }; }
+      (p = t.createElement("script")).type = "text/javascript"; p.crossOrigin = "anonymous"; p.async = !0;
+      p.src = "https://cdn.jsdelivr.net/npm/posthog-js@1.440.0/dist/array.full.js";
+      (r = t.getElementsByTagName("script")[0]).parentNode.insertBefore(p, r);
+      var u = e;
+      for (void 0 !== a ? u = e[a] = [] : a = "posthog", u.people = u.people || [], o = "capture register register_once identify reset opt_in_capturing opt_out_capturing".split(" "), n = 0; n < o.length; n++) g(u, o[n]);
+      e._i.push([i, s, a]);
+    }, e.__SV = 1);
+  }(document, window.posthog || []);
+  posthog.init(PH_KEY, {
+    api_host: PH_HOST,
+    person_profiles: "identified_only",
+    autocapture: false,              // clicks are captured below, with readable labels
+    capture_pageleave: true,
+    disable_session_recording: true,
+    disable_surveys: true,
+    persistence: "localStorage"
+  });
+
+  // The sections, in page order, by the name an event reports
+  var SECTIONS = [
+    ["hero", "#top"], ["why", "#why"], ["tools-intro", "#tools > .band-h"], ["turn-recap", "#turn-maps"],
+    ["change-walkthrough", "#change-maps"], ["pr-briefing", "#pr-maps"], ["codebase-atlas", "#visual-docs"],
+    ["principles", "#principles"], ["install", "#install"], ["closing", ".closing"]
+  ].map(function (s) { return { name: s[0], el: document.querySelector(s[1]) }; }).filter(function (s) { return s.el; });
+
+  function sectionOf(el) {
+    for (var i = SECTIONS.length - 1; i >= 0; i--) if (SECTIONS[i].el.contains(el)) return SECTIONS[i].name;
+    return "other";
+  }
+
+  // Time on each section: the clock runs for whichever section holds the middle of the window, while the tab is visible
+  var spent = {}, current = null, since = 0;
+  function sectionAtMiddle() {
+    var mid = innerHeight / 2, hit = null;
+    SECTIONS.forEach(function (s) { var r = s.el.getBoundingClientRect(); if (r.top <= mid && r.bottom >= mid) hit = s.name; });
+    return hit;
+  }
+  function tick() {
+    var now = performance.now();
+    if (current) spent[current] = (spent[current] || 0) + (now - since);
+    current = document.visibilityState === "visible" ? sectionAtMiddle() : null;
+    since = now;
+  }
+  function flush() {
+    tick();
+    Object.keys(spent).forEach(function (name, _, all) {
+      var s = Math.round(spent[name] / 100) / 10;
+      if (s >= 1) posthog.capture("section_time", { section: name, seconds: s, order: SECTIONS.findIndex(function (x) { return x.name === name; }) + 1 }, { transport: "sendBeacon" });
+    });
+    spent = {};
+  }
+  addEventListener("scroll", tick, { passive: true }); // ten rect reads: cheap enough to run on every scroll event
+  setInterval(function () { if (document.visibilityState === "visible") tick(); }, 1000); // and layout shifts without a scroll
+  addEventListener("resize", tick);
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "hidden") flush(); else tick(); });
+  addEventListener("pagehide", flush);
+  tick();
+
+  // Clicks: links, buttons and the pictures' controls (cards, groups, tabs)
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest("a, button, [data-show]");
+    if (!el) return;
+    // the text pieces joined with spaces, so "3" + "Resume an export" reads "3 Resume an export"
+    var parts = [], w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT), n;
+    while ((n = w.nextNode())) parts.push(n.nodeValue);
+    var label = (el.getAttribute("aria-label") || parts.join(" ")).replace(/\s+/g, " ").trim().slice(0, 80);
+    var kind = el.matches("[data-show]") ? "picture-control" : el.tagName === "A" ? "link" : "button";
+    var props = { label: label, kind: kind, section: sectionOf(el), in_hero: !!el.closest(".hero") };
+    if (el.tagName === "A") props.href = el.getAttribute("href");
+    if (el.dataset.show) props.pane = el.dataset.show;
+    posthog.capture("click", props, el.target === "_blank" || /^https?:/.test(props.href || "") ? { transport: "sendBeacon" } : undefined);
+  }, true);
+})();
+</script>
 
 
 
-</body>
-</html>
+
+</body></html>
